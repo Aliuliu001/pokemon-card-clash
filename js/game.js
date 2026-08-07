@@ -1838,7 +1838,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        resolve(canvas.toDataURL('image/jpeg', quality));
+                        resolve(canvas.toDataURL('image/webp', quality));
                     };
                     img.onerror = error => reject(error);
                 };
