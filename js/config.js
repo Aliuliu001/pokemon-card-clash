@@ -1,4 +1,4 @@
-﻿const MAX_ROWS = 100;       
+const MAX_ROWS = 100;       
         let CARDS_PER_TEAM = 20; 
         
         const POKEMON_TEAMS = [
@@ -58,7 +58,5 @@
             {fId: '20', fWord: 'Giraffe', bImgId: '', bText: 'I like playing games.', bTime: '15'}
         ];
 
-
-let imagesPool = {};
 
 let imagesPool = {}; // Lưu trữ ảnh dạng Base64
