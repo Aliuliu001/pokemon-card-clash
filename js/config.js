@@ -58,3 +58,7 @@
             {fId: '20', fWord: 'Giraffe', bImgId: '', bText: 'I like playing games.', bTime: '15'}
         ];
 
+
+let imagesPool = {};
+
+let imagesPool = {}; // Lưu trữ ảnh dạng Base64

@@ -1,4 +1,4 @@
-﻿        let frontItemsDatabase = [];
+        let frontItemsDatabase = [];
         let backItemsDatabase = [];
         let globalBackItemsDatabase = []; 
         let isSpecialModeActive = false; 
@@ -47,9 +47,15 @@
 
             let STORAGE_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashDataJSON_' + window.INJECTED_GAME_STATE.id : 'pokemonClashDataJSON_main';
             let SETTINGS_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashSettings_' + window.INJECTED_GAME_STATE.id : 'pokemonClashSettings_main';
+            let IMAGES_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashImages_' + window.INJECTED_GAME_STATE.id : 'pokemonClashImages_main';
             
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
+            try {
+                localStorage.setItem(IMAGES_KEY, JSON.stringify(imagesPool));
+            } catch (e) {
+                console.warn("Lỗi lưu ảnh vào localStorage (có thể do quá lớn): ", e);
+            }
         }
 
         let autoSaveTimeout;
@@ -155,9 +161,26 @@
             let parsedData;
             let STORAGE_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashDataJSON_' + window.INJECTED_GAME_STATE.id : 'pokemonClashDataJSON_main';
             let SETTINGS_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashSettings_' + window.INJECTED_GAME_STATE.id : 'pokemonClashSettings_main';
+            let IMAGES_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashImages_' + window.INJECTED_GAME_STATE.id : 'pokemonClashImages_main';
 
             let savedDataStr = localStorage.getItem(STORAGE_KEY);
             let savedSettingsStr = localStorage.getItem(SETTINGS_KEY);
+            let savedImagesStr = localStorage.getItem(IMAGES_KEY);
+
+            if (savedImagesStr) {
+                try {
+                    imagesPool = JSON.parse(savedImagesStr);
+                } catch (e) {
+                    console.error("Lỗi parse imagesPool", e);
+                }
+            } else if (window.INJECTED_GAME_STATE && window.INJECTED_GAME_STATE.imagesPool) {
+                imagesPool = window.INJECTED_GAME_STATE.imagesPool;
+            }
+            
+            // Cập nhật số lượng ảnh lên UI
+            const imgCount = Object.keys(imagesPool || {}).length;
+            const imgCountEl = document.getElementById('image-pool-count');
+            if (imgCountEl) imgCountEl.innerText = imgCount + " ảnh";
 
             // --- Di cư dữ liệu cũ (MIGRATION cho máy chủ) ---
             if (!savedDataStr && !window.INJECTED_GAME_STATE && localStorage.getItem('pokemonClashDataJSON')) {
@@ -305,7 +328,7 @@
             const exportId = 'game_' + Date.now();
             const scriptEl = document.createElement('script');
             scriptEl.id = 'injected-state';
-            scriptEl.textContent = `window.INJECTED_GAME_STATE = ${JSON.stringify({ id: exportId, data: exportData, settings: exportSettings })};`;
+            scriptEl.textContent = `window.INJECTED_GAME_STATE = ${JSON.stringify({ id: exportId, data: exportData, settings: exportSettings, imagesPool: imagesPool })};`;
             clone.querySelector('head').appendChild(scriptEl);
 
             const htmlContent = "<!DOCTYPE html>\n" + clone.outerHTML;
@@ -329,13 +352,17 @@
             const ids = idStr.split(',').map(s => s.trim()).filter(s => s);
             if (ids.length === 0) return '';
             
-            const imgElements = ids.map(id => `
+            const imgElements = ids.map(id => {
+                let src = imagesPool[id] ? imagesPool[id] : `./Front-side/${id}.png`;
+                let onErrorAttr = imagesPool[id] ? `onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"` : `onerror="if(this.src.endsWith('.png')){this.src='./Front-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Front-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}"`;
+                return `
                 <div class="relative w-full h-full flex items-center justify-center">
-                    <img src="./Front-side/${id}.png" class="w-full h-full object-contain drop-shadow-md p-0.5 z-10" alt="img" 
-                         onerror="if(this.src.endsWith('.png')){this.src='./Front-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Front-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}">
+                    <img src="${src}" class="w-full h-full object-contain drop-shadow-md p-0.5 z-10" alt="img" 
+                         ${onErrorAttr}>
                     <div class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 text-slate-400 text-[9px] text-center font-bold z-0 bg-slate-50 rounded"><span>Missing<br>${id}</span></div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             return `<div class="flex flex-row items-center justify-center gap-1 w-full h-full">${imgElements}</div>`;
         }
@@ -345,13 +372,17 @@
             const ids = imgIdStr.split(',').map(s => s.trim()).filter(s => s);
             if (ids.length === 0) return '';
             
-            const imgElements = ids.map(id => `
+            const imgElements = ids.map(id => {
+                let src = imagesPool[id] ? imagesPool[id] : `./Back-side/${id}.png`;
+                let onErrorAttr = imagesPool[id] ? `onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"` : `onerror="if(this.src.endsWith('.png')){this.src='./Back-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Back-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}"`;
+                return `
                 <div class="relative w-full h-full flex items-center justify-center">
-                    <img src="./Back-side/${id}.png" class="max-w-full max-h-full object-contain opacity-95 z-10 drop-shadow-sm" alt="img" 
-                         onerror="if(this.src.endsWith('.png')){this.src='./Back-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Back-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}">
+                    <img src="${src}" class="max-w-full max-h-full object-contain opacity-95 z-10 drop-shadow-sm" alt="img" 
+                         ${onErrorAttr}>
                     <div class="hidden flex-col items-center justify-center h-full text-slate-400 w-full absolute inset-0 bg-slate-100 z-0 rounded"><span class="text-xl mb-1">🖼️</span><span class="text-[8px] font-bold">${id}</span></div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             return `<div class="flex flex-row items-center justify-center gap-2 w-full h-full overflow-hidden p-1">${imgElements}</div>`;
         }
@@ -1726,3 +1757,91 @@
         
         btnSkip.addEventListener('click', (e) => { e.preventDefault(); skipHandler(true); });
         btnSkip.addEventListener('touchstart', (e) => { e.preventDefault(); skipHandler(true); }, { passive: false });
+
+        // --- KHO ẢNH NỘI BỘ (IMAGE POOL) ---
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const btnUploadImages = document.getElementById('btn-upload-images');
+        const btnClearImages = document.getElementById('btn-clear-images');
+        
+        if (btnUploadImages && imageUploadInput) {
+            btnUploadImages.addEventListener('click', () => {
+                imageUploadInput.click();
+            });
+
+            imageUploadInput.addEventListener('change', async (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                btnUploadImages.innerHTML = 'Đang xử lý...';
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (!file.type.startsWith('image/')) continue;
+                    
+                    let fileName = file.name;
+                    let dotIndex = fileName.lastIndexOf('.');
+                    let id = dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName;
+                    
+                    try {
+                        let base64 = await compressImage(file, 600, 0.7);
+                        imagesPool[id] = base64;
+                    } catch(err) {
+                        console.error("Lỗi xử lý ảnh: " + file.name, err);
+                    }
+                }
+                
+                const imgCount = Object.keys(imagesPool).length;
+                const poolCountEl = document.getElementById('image-pool-count');
+                if (poolCountEl) poolCountEl.innerText = imgCount + " ảnh";
+                btnUploadImages.innerHTML = '<span class="text-lg leading-none">⬆️</span> Upload Images';
+                autoSave();
+                
+                imageUploadInput.value = '';
+            });
+        }
+
+        if (btnClearImages) {
+            btnClearImages.addEventListener('click', () => {
+                if (confirm('Bạn có chắc chắn muốn xóa toàn bộ ảnh trong Nguồn Ảnh?')) {
+                    imagesPool = {};
+                    const poolCountEl = document.getElementById('image-pool-count');
+                    if (poolCountEl) poolCountEl.innerText = "0 ảnh";
+                    autoSave();
+                }
+            });
+        }
+
+        function compressImage(file, maxSize, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > maxSize || height > maxSize) {
+                            if (width > height) {
+                                height = Math.round(height *= maxSize / width);
+                                width = maxSize;
+                            } else {
+                                width = Math.round(width *= maxSize / height);
+                                height = maxSize;
+                            }
+                        }
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
