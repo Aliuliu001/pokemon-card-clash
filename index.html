@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Card Clash - Multi-Mode Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="p-1 md:p-2 pb-20 md:pb-24 flex flex-col items-center relative overflow-x-hidden">
+
+    <!-- Header (Đã ẩn Tiêu đề & Cân chỉnh Timer) -->
+    <div class="w-full flex flex-col items-center justify-center z-10 pointer-events-none">
+        <h1 id="main-title" class="hidden">CLASH: PIKACHU vs CHARIZARD</h1>
+        
+        <!-- GAME TIMER CONTAINER -->
+        <div id="game-timer-container" class="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center my-1 transition-all duration-300 pointer-events-auto">
+            <!-- Vòng tròn nền -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" stroke-width="8"></circle>
+                <!-- Vòng tròn thời gian chạy -->
+                <circle id="game-timer-progress" cx="50" cy="50" r="45" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round" class="timer-ring" stroke-dasharray="283" stroke-dashoffset="0" style="stroke-dashoffset: 53.4556; stroke: rgb(34, 197, 94);"></circle>
+            </svg>
+            <!-- Số điện tử -->
+            <span id="game-timer-text" class="relative z-10 text-lg md:text-xl font-black text-white tarot-font drop-shadow-md tracking-wider">01:13</span>
+        </div>
+
+        <p id="global-status" class="hidden text-lg md:text-3xl text-slate-300 font-semibold animate-pulse my-1 pointer-events-auto" style="display: none;"></p>
+    </div>
+
+    <!-- Battle Arenas -->
+    <div class="w-full max-w-[1920px] px-1 md:px-2 flex flex-col md:flex-row gap-1.5 md:gap-3">
+        
+        <!-- TEAM 1 -->
+        <div id="team1-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-3 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 234, 179, 8; --t-main: #eab308; --t-light: #fef08a; --t-dark: #a16207; --t-text: #fde047;">
+            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
+                    <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
+                        <div class="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
+                            <!-- KHIÊN BẢO VỆ -->
+                            <div id="team1-shield-container" class="absolute inset-[-10px] md:inset-[-15px] z-20 pointer-events-none opacity-0 scale-150 transition-all duration-500 flex items-center justify-center">
+                                <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
+                            </div>
+
+                            <img id="team1-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" class="w-full h-full object-contain p-2 md:p-3 transition-transform duration-300 scale-125 z-10 relative" alt="Avatar">
+                            <div id="team1-sad-bubbles" class="absolute inset-0 pointer-events-none z-20 flex justify-center"></div>
+                            <div id="team1-fireworks" class="absolute inset-[-20px] z-0 pointer-events-none hidden"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="relative inline-block w-full">
+                                <select id="team1-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full truncate theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
+                                <span class="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-xs md:text-base theme-text">▼</span>
+                            </div>
+                            <div class="text-[9px] md:text-xs mt-0.5 text-slate-300 font-bold">Flipped: <span id="team1-flipped">1</span>/<span class="team-cards-total">16</span></div>
+                        </div>
+                    </div>
+                    <div class="text-right bg-slate-900/80 px-2 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border-2 theme-select-border flex-shrink-0 shadow-inner">
+                        <div class="text-[8px] md:text-[10px] font-black uppercase theme-text opacity-80 leading-none mb-0.5">Total Score</div>
+                        <div id="team1-score" class="text-2xl md:text-4xl font-black theme-text transition-colors duration-300 drop-shadow-lg leading-none animate-pop">10</div>
+                    </div>
+                </div>
+            </div>
+            <div id="board-team1" class="grid grid-cols-4 gap-x-1 gap-y-4 sm:gap-x-1.5 sm:gap-y-6 md:gap-x-2 md:gap-y-8 lg:gap-y-10 perspective flex-1 pt-4 sm:pt-6 lg:pt-8 mt-1"></div>
+        </div>
+
+        <!-- TEAM 2 -->
+        <div id="team2-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-3 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 239, 68, 68; --t-main: #ef4444; --t-light: #fca5a5; --t-dark: #b91c1c; --t-text: #fca5a5;">
+            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
+                    <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
+                        <div class="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
+                            <!-- KHIÊN BẢO VỆ -->
+                            <div id="team2-shield-container" class="absolute inset-[-10px] md:inset-[-15px] z-20 pointer-events-none opacity-0 scale-150 transition-all duration-500 flex items-center justify-center">
+                                <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
+                            </div>
+
+                            <img id="team2-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png" class="w-full h-full object-contain p-2 md:p-3 transition-transform duration-300 scale-125 z-10 relative" alt="Avatar">
+                            <div id="team2-sad-bubbles" class="absolute inset-0 pointer-events-none z-20 flex justify-center"></div>
+                            <div id="team2-fireworks" class="absolute inset-[-20px] z-0 pointer-events-none hidden"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="relative inline-block w-full">
+                                <select id="team2-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full truncate theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
+                                <span class="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-xs md:text-base theme-text">▼</span>
+                            </div>
+                            <div class="text-[9px] md:text-xs mt-0.5 text-slate-300 font-bold">Flipped: <span id="team2-flipped">2</span>/<span class="team-cards-total">16</span></div>
+                        </div>
+                    </div>
+                    <div class="text-right bg-slate-900/80 px-2 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border-2 theme-select-border flex-shrink-0 shadow-inner">
+                        <div class="text-[8px] md:text-[10px] font-black uppercase theme-text opacity-80 leading-none mb-0.5">Total Score</div>
+                        <div id="team2-score" class="text-2xl md:text-4xl font-black theme-text transition-colors duration-300 drop-shadow-lg leading-none animate-pop">0</div>
+                    </div>
+                </div>
+            </div>
+            <div id="board-team2" class="grid grid-cols-4 gap-x-1 gap-y-4 sm:gap-x-1.5 sm:gap-y-6 md:gap-x-2 md:gap-y-8 lg:gap-y-10 perspective flex-1 pt-4 sm:pt-6 lg:pt-8 mt-1"></div>
+        </div>
+
+    </div>
+
+    <!-- Center Control & Bottom Tools -->
+    <div class="mt-8 mb-8 text-center w-full flex flex-col items-center gap-6 px-4">
+        <!-- Nút Restart -->
+        <button id="btn-reset" class="bg-gradient-to-b from-slate-200 to-slate-400 hover:from-white hover:to-slate-300 text-slate-900 font-black text-sm md:text-lg py-3 px-12 rounded-full shadow-[0_4px_0_#475569,0_10px_15px_rgba(0,0,0,0.4)] hover:shadow-[0_2px_0_#475569,0_5px_10px_rgba(0,0,0,0.4)] hover:translate-y-[2px] active:shadow-[0_0px_0_#475569] active:translate-y-[4px] transition-all tarot-font tracking-widest border border-white/50">
+            RESTART GAME
+        </button>
+    </div>
+
+    <!-- Khối công cụ -->
+    <div class="absolute bottom-2 left-2 md:bottom-4 md:left-4 flex flex-row items-end gap-2 z-40 bg-slate-800/40 p-1.5 md:p-2 rounded-xl backdrop-blur-sm border border-slate-600/50">
+        <button id="btn-settings" class="w-8 h-8 md:w-10 md:h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-sm md:text-base transition-all duration-300 border border-slate-500 flex items-center justify-center shadow-lg hover:scale-105" title="Nhập dữ liệu Excel &amp; Cài đặt Hiển thị">⚙️</button>
+        
+        <div class="relative group">
+            <button id="btn-special-mode" class="relative w-8 h-8 md:w-10 md:h-10 rounded-full transition-all duration-300 border border-slate-800 flex items-center justify-center shadow-lg bg-white overflow-hidden hover:scale-105 active:scale-95" title="Bật/Tắt Các Lá Bài Board Game">
+                <div class="absolute top-0 left-0 w-full h-1/2 bg-red-500 pointer-events-none"></div>
+                <div class="absolute top-1/2 w-full h-1 bg-slate-800 transform -translate-y-1/2 pointer-events-none"></div>
+                <div class="relative w-2.5 h-2.5 md:w-3 md:h-3 bg-white border-[1.5px] border-slate-800 rounded-full z-10 transition-colors pointer-events-none group-hover:bg-yellow-300"></div>
+                <div id="pokeball-glow" class="absolute inset-[-10px] rounded-full shadow-[0_0_10px_#fde047] opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+            </button>
+            <span id="special-mode-indicator" class="absolute -bottom-0 -right-0 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border border-slate-800 bg-red-500 transition-colors pointer-events-none z-50"></span>
+        </div>
+
+        <button id="btn-sound" class="w-8 h-8 md:w-10 md:h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-sm md:text-base transition-all duration-300 border border-slate-500 flex items-center justify-center shadow-lg hover:scale-105" title="Bật/Tắt Âm thanh &amp; Đổi Nhạc">🔇</button>
+        
+        <button id="btn-score-settings" class="w-8 h-8 md:w-10 md:h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all duration-300 border border-slate-500 flex items-center justify-center shadow-lg p-1 overflow-hidden group hover:scale-105" title="Cài đặt biên độ điểm ngẫu nhiên">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png" class="w-full h-full object-cover transform scale-[1.7] group-hover:scale-150 transition-transform" alt="Snorlax">
+        </button>
+    </div>
+
+    <!-- Nút Kết Thúc Game (Mimikyu) -->
+    <button id="btn-end-early" class="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-16 h-16 md:w-20 md:h-20 bg-slate-800 hover:bg-slate-700 rounded-full border-[3px] border-rose-500 z-40 flex items-center justify-center shadow-[0_0_20px_rgba(225,29,72,0.6)] transition-all hover:scale-110 active:scale-95 group overflow-hidden" title="Kết Thúc Game &amp; Tính Điểm">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/778.png" class="w-full h-full object-cover transform scale-[1.2] md:scale-[1.3] group-hover:scale-[1.4] transition-transform" alt="Mimikyu">
+    </button>
+
+    <!-- ============================================== -->
+    <!-- CÁC MODAL HIỂN THỊ (POPUP) CỦA HỆ THỐNG -->
+    <!-- ============================================== -->
+    
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/90 z-50 flex-col items-center justify-center p-4 flex">
+        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-5xl border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-[90vh]">
+            <h2 class="text-xl md:text-2xl font-black text-white mb-1 tarot-font tracking-wider">CẬP NHẬT DỮ LIỆU TỪ EXCEL</h2>
+            
+            <!-- Khu vực Tùy chỉnh Hiển thị -->
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-600 mb-3 flex flex-col gap-3 shadow-inner mt-2">
+                <h3 class="text-yellow-400 font-bold text-sm md:text-base uppercase">⚙️ Tuỳ chỉnh Hiển thị &amp; Cài đặt Game</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <div class="flex-1">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Số lượng Thẻ:</label>
+                        <select id="setting-cards-count" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
+                            <option value="9">9 Thẻ / Đội</option>
+                            <option value="12">12 Thẻ / Đội</option>
+                            <option value="16">16 Thẻ / Đội</option>
+                            <option value="20" selected="">20 Thẻ / Đội</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Mặt Trước (Câu hỏi):</label>
+                        <select id="setting-front-mode" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
+                            <option value="both">Hình Ảnh &amp; Từ Vựng</option>
+                            <option value="image">Chỉ hiển thị Hình Ảnh</option>
+                            <option value="text">Chỉ hiển thị Từ Vựng</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Mặt Sau (Lật thẻ):</label>
+                        <select id="setting-back-mode" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
+                            <option value="full">Đầy đủ (Hình, Câu, Điểm)</option>
+                            <option value="image_only">Chỉ hiển thị Hình ảnh</option>
+                            <option value="text_only">Chỉ hiển thị Câu chữ</option>
+                            <option value="points">Chỉ hiển thị Điểm Số</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Đồng hồ (Timer):</label>
+                        <select id="setting-timer-enabled" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
+                            <option value="on">Bật (On)</option>
+                            <option value="off">Tắt (Off)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Thời gian (Giây/Thẻ):</label>
+                        <input type="number" id="setting-global-time" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 shadow-md transition-colors font-semibold" value="180" min="30">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 mb-3">
+                <p class="text-slate-300 text-xs md:text-sm">
+                    Mở Excel, bôi đen cả 5 cột, copy và nhấn <b>Ctrl+V</b> vào ô đầu tiên của bảng dưới. <br>
+                    <b class="text-yellow-400">Lưu ý:</b> Bỏ trống <b>ID Ảnh Sau</b> -&gt; Thẻ chỉ có Chữ to. Bỏ trống <b>Thời gian</b> -&gt; Thẻ không có Bom.
+                </p>
+                <div class="flex flex-wrap gap-2 w-full">
+                    <div class="flex items-center bg-slate-700 rounded-lg overflow-hidden border border-blue-500 shadow-inner">
+                        <select id="auto-col-select" class="bg-slate-800 text-yellow-400 px-2 py-1.5 outline-none text-xs sm:text-sm font-bold border-r border-slate-500 cursor-pointer">
+                            <option value="0">Cột 1 (ID Trước)</option>
+                            <option value="1">Cột 2 (Từ Vựng)</option>
+                            <option value="2">Cột 3 (ID Sau)</option>
+                            <option value="3">Cột 4 (Câu Sau)</option>
+                            <option value="4">Cột 5 (Thời Gian)</option>
+                        </select>
+                        <input type="number" id="auto-start" class="bg-transparent text-yellow-300 w-12 sm:w-16 px-1 py-1.5 outline-none text-xs sm:text-sm font-bold text-center" placeholder="Từ" title="Số bắt đầu">
+                        <span class="text-slate-400 text-xs px-1">➡️</span>
+                        <input type="number" id="auto-end" class="bg-transparent text-yellow-300 w-12 sm:w-16 px-1 py-1.5 outline-none text-xs sm:text-sm font-bold text-center border-r border-slate-500" placeholder="Đến" title="Số kết thúc">
+                        <button id="btn-auto-fill" class="bg-blue-600 hover:bg-blue-500 text-white px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap">🪄 Rải Số</button>
+                    </div>
+                    
+                    <div class="flex items-center bg-slate-700 rounded-lg overflow-hidden border border-amber-500 shadow-inner">
+                        <input type="number" id="quick-time-input" placeholder="Giây" class="bg-transparent text-amber-400 px-2 py-1.5 w-16 sm:w-20 outline-none text-xs sm:text-sm font-bold text-center" min="1" step="1" title="Thời gian đếm ngược cố định" value="10">
+                        <button id="btn-fill-time" class="bg-amber-600 hover:bg-amber-500 text-white px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition-colors border-l border-amber-500 whitespace-nowrap">⏱️ Điền Time</button>
+                    </div>
+                    
+                    <div class="flex items-center bg-slate-700 rounded-lg overflow-hidden border border-red-500 shadow-inner">
+                        <select id="clear-column-select" class="bg-transparent text-red-400 px-2 py-1.5 outline-none text-xs sm:text-sm font-bold border-r border-slate-500 cursor-pointer w-full md:w-auto">
+                            <option value="all" class="bg-slate-800 text-white">🗑️ Xóa Tất Cả</option>
+                            <option value="0" class="bg-slate-800 text-white">Xóa Cột 1</option>
+                            <option value="1" class="bg-slate-800 text-white">Xóa Cột 2</option>
+                            <option value="2" class="bg-slate-800 text-white">Xóa Cột 3</option>
+                            <option value="3" class="bg-slate-800 text-white">Xóa Cột 4</option>
+                            <option value="4" class="bg-slate-800 text-white">Xóa Cột 5</option>
+                        </select>
+                        <button id="btn-clear-table" class="bg-red-600 hover:bg-red-500 text-white px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap">Xóa</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-slate-900 border border-slate-600 rounded-xl relative mt-2">
+                <table class="w-full text-left text-sm text-slate-300 border-collapse table-fixed">
+                    <thead class="sticky top-0 bg-slate-700 text-xs uppercase shadow-md z-10">
+                        <tr>
+                            <th class="px-1 py-3 border-b border-r border-slate-600 text-yellow-400 w-[12%] text-center">ID Trước</th>
+                            <th class="px-2 py-3 border-b border-r border-slate-600 text-yellow-400 w-[20%]">Từ Vựng Trước</th>
+                            <th class="px-1 py-3 border-b border-r border-slate-600 text-green-400 w-[15%] text-center bg-slate-800/50">ID Sau (Option)</th>
+                            <th class="px-2 py-3 border-b border-r border-slate-600 text-green-400 w-[43%] bg-slate-800/50">Câu Mặt Sau</th>
+                            <th class="px-1 py-3 border-b border-slate-600 text-red-400 w-[10%] text-center bg-slate-800/50">Time(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-grid-body"></tbody>
+                </table>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-4 w-full">
+                <button id="btn-export-html" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-lg mr-auto">📥 Tải File HTML Game</button>
+                <button id="btn-close-settings" class="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-bold transition-colors">Hủy</button>
+                <button id="btn-save-settings" class="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-colors shadow-lg">Lưu &amp; Khởi động lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPECIAL CARDS SELECTION MODAL (POKEBALL MODAL) -->
+    <div id="special-cards-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-4xl border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh]">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 tarot-font tracking-wider drop-shadow-md">BOARD GAME MODE</h2>
+                <p class="text-slate-300 text-sm md:text-base mt-2">Hệ thống sẽ <b>tự động chia đều</b> các lá bài Tốt và Xấu bạn chọn bên dưới vào cả 2 Đội chơi.</p>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-2">
+                <div id="special-cards-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-600">
+                <button id="btn-close-special" class="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-bold transition-colors text-lg">Tắt Chế Độ</button>
+                <button id="btn-save-special" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white rounded-xl font-bold transition-all shadow-[0_4px_15px_rgba(16,185,129,0.4)] text-lg hover:scale-105 active:scale-95">Bật &amp; Khởi Động Trộn Bài</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCORE SETTINGS MODAL (SNORLAX MODAL) -->
+    <div id="score-settings-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-md border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col">
+            <div class="text-center mb-4">
+                <div class="text-6xl mb-2">🐻💤</div>
+                <h2 class="text-xl md:text-2xl font-black text-white tarot-font tracking-wider">CÀI ĐẶT ĐIỂM SỐ</h2>
+                <p class="text-slate-300 text-xs mt-1">Điều chỉnh biên độ ngẫu nhiên cho thẻ bài</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-600">
+                    <h3 class="text-green-400 font-bold mb-2 text-center text-sm">KHOẢNG ĐIỂM CỘNG (+)</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-300 text-sm">Tối thiểu:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('posMin', -10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-posMin" class="w-10 text-center text-white font-black text-lg">10</span>
+                            <button onclick="updateScoreSetting('posMin', 10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-300 text-sm">Tối đa:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('posMax', -10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-posMax" class="w-10 text-center text-white font-black text-lg">100</span>
+                            <button onclick="updateScoreSetting('posMax', 10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-600">
+                    <h3 class="text-red-400 font-bold mb-2 text-center text-sm">KHOẢNG ĐIỂM TRỪ (-)</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-300 text-sm">Nhẹ nhất:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('negMin', -10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-negMin" class="w-12 text-center text-white font-black text-lg">-10</span>
+                            <button onclick="updateScoreSetting('negMin', 10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-300 text-sm">Nặng nhất:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('negMax', -10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-negMax" class="w-12 text-center text-white font-black text-lg">-40</span>
+                            <button onclick="updateScoreSetting('negMax', 10)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button id="btn-close-score-settings" class="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-colors w-full shadow-lg active:scale-95 text-lg">Hoàn Tất</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZOOM MODAL (THẺ BÀI PHÓNG TO) -->
+    <div id="zoom-modal" class="fixed inset-0 bg-black/85 z-50 flex-col items-center justify-center p-4 hidden">
+        <h2 id="modal-team-title" class="text-2xl md:text-4xl font-black text-white mb-4 tarot-font drop-shadow-lg tracking-widest transition-colors duration-300" style="color: rgb(239, 68, 68);">CHARIZARD'S TURN</h2>
+        
+        <div class="w-[85%] max-w-4xl relative modal-card mb-16 md:mb-20">
+            <div id="modal-card-content" class="w-full aspect-[4/3] sm:aspect-video bg-fdf6e3 rounded-3xl border-8 flex flex-col p-4 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative bg-white transition-colors duration-300 mx-auto" style="border-color: rgb(239, 68, 68); box-shadow: rgba(239, 68, 68, 0.6) 0px 0px 50px;">
+                <div id="fuse-container" class="hidden absolute -top-4 left-6 right-20 md:right-28 h-6 bg-slate-900 rounded-full border-4 border-slate-600 shadow-xl overflow-hidden z-40">
+                    <div id="fuse-bar" class="h-full bg-green-500 w-full transition-all duration-100 ease-linear ml-auto"></div>
+                    <div class="absolute inset-0 flex justify-center items-center text-xs md:text-sm font-black text-white drop-shadow-md z-10" id="fuse-text">0.0s</div>
+                </div>
+                <div id="modal-content-area" class="w-full h-full flex flex-col gap-3 mt-2" style="display: flex;">
+                        <div class="w-full h-full rounded-xl overflow-hidden relative bg-slate-200 flex items-center justify-center border-2 border-slate-300 p-2">
+                            <div class="flex flex-row items-center justify-center gap-2 w-full h-full overflow-hidden p-1">
+                <div class="relative w-full h-full flex items-center justify-center">
+                    <img src="./Back-side/23.png" class="max-w-full max-h-full object-contain opacity-95 z-10 drop-shadow-sm" alt="img" onerror="if(this.src.endsWith('.png')){this.src='./Back-side/23.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Back-side/23.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}">
+                    <div class="hidden flex-col items-center justify-center h-full text-slate-400 w-full absolute inset-0 bg-slate-100 z-0 rounded"><span class="text-xl mb-1">🖼️</span><span class="text-[8px] font-bold">23</span></div>
+                </div>
+            </div>
+                        </div>
+                    </div>
+                
+                <div id="btn-apply-score-container" class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center">
+                    <button id="btn-apply-score" class="relative w-28 h-28 md:w-40 md:h-40 border-[4px] bomb-active text-white rounded-full flex items-center justify-center cursor-pointer transition-transform z-50 border-none outline-none focus:outline-none">
+                        <svg class="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 md:-top-6 md:w-14 md:h-14 text-amber-700 z-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="4" d="M12 20 Q 12 10 20 4"></path></svg>
+                        <div class="spark-fx absolute -top-6 right-2 md:-top-8 md:right-5 w-6 h-6 md:w-8 md:h-8 bg-yellow-400 rounded-full spark mix-blend-screen shadow-[0_0_20px_#fef08a] z-10 flex items-center justify-center"><div class="w-full h-full bg-white rounded-full animate-ping opacity-75"></div></div>
+                        <span class="text-5xl md:text-7xl font-black text-red-500 tarot-font drop-shadow-[0_0_10px_rgba(239,68,68,1)] z-20 transition-colors duration-500">-30</span>
+                    </button>
+                <div class="explosion-core"></div><div class="explosion-ring"></div></div>
+            </div>
+
+            <button id="btn-skip" class="absolute -bottom-12 md:-bottom-16 left-1/2 transform -translate-x-1/2 text-white bg-green-500 hover:bg-green-400 w-20 h-20 md:w-28 md:h-28 flex items-center justify-center rounded-full font-black shadow-[0_5px_25px_rgba(34,197,94,0.7)] z-[100] border-4 border-white transition-all animate-pulse active:scale-95 focus:outline-none cursor-pointer"><span class="inline-block transform -rotate-90 text-6xl md:text-7xl drop-shadow-lg filter pointer-events-none">✂️</span></button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/game.js"></script>
+
+</body>
+</html>
