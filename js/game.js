@@ -1783,7 +1783,7 @@
                     let id = dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName;
                     
                     try {
-                        let base64 = await compressImage(file, 600, 0.7);
+                        let base64 = await compressImage(file, 400, 1.0);
                         imagesPool[id] = base64;
                     } catch(err) {
                         console.error("Lỗi xử lý ảnh: " + file.name, err);
@@ -1838,7 +1838,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        resolve(canvas.toDataURL('image/webp', quality));
+                        resolve(canvas.toDataURL('image/png'));
                     };
                     img.onerror = error => reject(error);
                 };
