@@ -1,4 +1,4 @@
-# Pokemon Card Clash — Multi-Mode Edition 🃏
+# Pokemon Cards 🃏
 
 Một dự án minigame giáo dục dạng lật thẻ bài được thiết kế để giúp học sinh học từ vựng, hình ảnh, và câu hỏi một cách trực quan, sinh động. Giáo viên có thể dễ dàng tạo nội dung bài học và chia sẻ cho học sinh dưới dạng 1 đường link duy nhất hoặc 1 file HTML di động.
 
