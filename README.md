@@ -7,7 +7,6 @@ Một dự án minigame giáo dục dạng lật thẻ bài được thiết k�
 - **Chạy hoàn toàn trên trình duyệt:** Không cần cài đặt, không cần server. Hoạt động trên mọi thiết bị (máy tính, điện thoại, máy tính bảng).
 - **Giao diện thân thiện, hiện đại:** Sử dụng TailwindCSS cho giao diện bắt mắt, hiệu ứng 3D lật thẻ bài mượt mà.
 - **Tính năng Nguồn Ảnh (Image Pool):** Tải ảnh `.png`, `.jpg` trực tiếp từ máy tính lên game. Hệ thống sẽ tự động nén ảnh dưới định dạng siêu nhẹ (WebP/PNG) để đảm bảo game không bị giật lag và không bị lỗi bộ nhớ trình duyệt. Hỗ trợ hoàn hảo cho ảnh trong suốt (transparent background).
-- **Xuất File HTML đóng gói:** Chỉ với 1 nút bấm, toàn bộ dữ liệu chữ và hình ảnh của bài học sẽ được đóng gói thành 1 file HTML duy nhất. Giáo viên chỉ cần gửi file này cho học sinh qua Zalo/Email là học sinh có thể click vào chơi ngay.
 - **Tùy chỉnh đa dạng:** Cho phép thay đổi số lượng thẻ bài, thời gian đếm ngược, và cách thức hiển thị (mặt trước/mặt sau).
 
 ## 🚀 Hướng Dẫn Sử Dụng (Dành cho Giáo viên)
@@ -18,7 +17,7 @@ Một dự án minigame giáo dục dạng lật thẻ bài được thiết k�
 3. **Thiết lập dữ liệu:** Tại bảng dữ liệu phía dưới, điền thông tin cho từng cặp thẻ bài:
    - **ID Ảnh Trước / ID Ảnh Sau:** Điền số thứ tự của ảnh (Ví dụ: `1`).
    - **Chữ Trước / Chữ Sau:** Điền từ vựng hoặc câu hỏi.
-4. **Lưu và Chia sẻ:** Bấm nút **Xuất File HTML**. Game sẽ tạo ra một file `.html` chứa toàn bộ bài học. Gửi file này cho học sinh là xong!
+4. **Lưu và Chia sẻ:** Bấm **Lưu & Khởi động lại**. Bài học được lưu ngay trong máy thầy — mở link game là chơi được ngay tại lớp.
 
 ### Dành cho người am hiểu kỹ thuật (Sử dụng GitHub Pages):
 Nếu bạn muốn lưu trữ game online (chia sẻ qua link `https://...` thay vì gửi file):

@@ -61,4 +61,4 @@
   - Chặn localStorage (giống Zalo mở file): game vẫn chạy 40 thẻ, kho ảnh nạp đủ từ IndexedDB ✔
   - Nút Clear ghi đúng vào kho lớn (IDB = 0) ✔
   - 0 lỗi JavaScript trong toàn bộ phiên test.
-- **🚨 Phát hiện mới khi test (chưa sửa, cần anh duyệt):** File HTML xuất ra (📥 Tải File HTML) **không chứa code game** — nó trỏ ra `js/game.js` ở ngoài. Gửi 1 file .html đơn lẻ cho học sinh là mở lên chết. (Trước refactoring Giai đoạn 1 thì code gộp 1 file nên vẫn chạy; sau khi tách file thì lỗi này sinh ra.) Việc này sẽ sửa ở bước xuất file.
+- **🚨 Phát hiện mới khi test:** File HTML xuất ra **không chứa code game** — nó trỏ ra `js/game.js` ở ngoài, gửi 1 file .html đơn lẻ là mở lên chết. **→ Quyết định: bỏ hẳn tính năng Xuất File HTML** (giáo viên chơi tại lớp qua link, không tải file về copy sang trung tâm khác cho đỡ tốn công). Nút 📥 và toàn bộ code export đã xóa.

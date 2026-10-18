@@ -126,7 +126,7 @@
                 console.warn('IndexedDB ghi lỗi, thử localStorage:', e);
             }
             if (SafeStore.set(key, JSON.stringify(imagesPool))) return true;
-            alert('⚠️ BỘ NHỚ TRÌNH DUYỆT ĐÃ HẾT!\n\nKho ảnh KHÔNG thể lưu thêm được nữa.\n\nCách xử lý:\n• Bấm 📥 Tải File HTML — ảnh được nhét thẳng vào file, không mất;\n• hoặc bấm Clear để xóa bớt ảnh trong Nguồn Ảnh.');
+            alert('⚠️ BỘ NHỚ TRÌNH DUYỆT ĐÃ HẾT!\n\nKho ảnh KHÔNG thể lưu thêm được nữa.\n\nCách xử lý: bấm Clear để xóa bớt ảnh trong Nguồn Ảnh (ưu tiên xóa ảnh không dùng tới) rồi upload lại.');
             return false;
         }
 
@@ -409,61 +409,8 @@
             renderGrid(parsedData);
         }
 
-        // --- TÍNH NĂNG: XUẤT GAME THÀNH FILE HTML ---
-        document.getElementById('btn-export-html').addEventListener('click', () => {
-            autoSave(); // Ép lưu mới nhất
-            
-            const exportData = [];
-            for(let i = 0; i < MAX_ROWS; i++) {
-                exportData.push({
-                    fId: document.querySelector(`input[data-row="${i}"][data-col="0"]`).value.trim(),
-                    fWord: document.querySelector(`input[data-row="${i}"][data-col="1"]`).value.trim(),
-                    bImgId: document.querySelector(`input[data-row="${i}"][data-col="2"]`).value.trim(),
-                    bText: document.querySelector(`input[data-row="${i}"][data-col="3"]`).value.trim(),
-                    bTime: document.querySelector(`input[data-row="${i}"][data-col="4"]`).value.trim()
-                });
-            }
-            const exportSettings = {
-                cardsCount: parseInt(document.getElementById('setting-cards-count').value),
-                frontMode: document.getElementById('setting-front-mode').value,
-                backMode: document.getElementById('setting-back-mode').value,
-                timerEnabled: document.getElementById('setting-timer-enabled').value === 'on',
-                globalTime: parseInt(document.getElementById('setting-global-time').value),
-                scorePosMin: SCORE_SETTINGS.posMin,
-                scorePosMax: SCORE_SETTINGS.posMax,
-                scoreNegMin: SCORE_SETTINGS.negMin,
-                scoreNegMax: SCORE_SETTINGS.negMax
-            };
-
-            const clone = document.documentElement.cloneNode(true);
-            clone.querySelector('#board-team1').innerHTML = '';
-            clone.querySelector('#board-team2').innerHTML = '';
-            clone.querySelector('#data-grid-body').innerHTML = '';
-            
-            const oldState = clone.querySelector('#injected-state');
-            if (oldState) oldState.remove();
-
-            const exportId = 'game_' + Date.now();
-            const scriptEl = document.createElement('script');
-            scriptEl.id = 'injected-state';
-            scriptEl.textContent = `window.INJECTED_GAME_STATE = ${JSON.stringify({ id: exportId, data: exportData, settings: exportSettings, imagesPool: imagesPool })};`;
-            clone.querySelector('head').appendChild(scriptEl);
-
-            const htmlContent = "<!DOCTYPE html>\n" + clone.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            
-            let fileName = prompt("Nhập tên Bài học (File HTML) bạn muốn lưu (VD: Unit_1_Animals):", "Pokemon_Clash_Lesson");
-            if (!fileName) return; 
-            
-            a.download = fileName.endsWith('.html') ? fileName : fileName + '.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
+        // (Đã bỏ tính năng Xuất File HTML theo quyết định của thầy — game chỉ chạy
+        // online tại lớp. Việc tải file về rồi copy sang máy trung tâm khác tốn công.)
 
         function renderFrontImages(idStr) {
             if (!idStr || idStr.trim() === "") return '';
