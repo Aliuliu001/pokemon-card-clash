@@ -35,27 +35,30 @@ const MAX_ROWS = 100;
         const EFFECT_SETTINGS = { explosionDelayMs: 1500, freezeDelayMs: 1500 };
         const AVATAR_SETTINGS = { happyEffectEnabled: true, sadEffectEnabled: true };
 
+        // Data mẫu: chỉ dùng TỪ VỰNG + CÂU LỆNH (không trỏ ảnh mặc định vì bộ ảnh
+        // Front-side/Back-side là bài khác — ghép bừa sẽ sai nghĩa). Anh upload ảnh
+        // thật rồi điền ID thì thẻ mới có ảnh.
         const DEFAULT_JSON_DATA = [
-            {fId: '1', fWord: 'Snail', bImgId: '1', bText: 'Stand up', bTime: '10'}, 
-            {fId: '2', fWord: 'Seahorse', bImgId: '', bText: 'Open the book', bTime: '15'}, 
-            {fId: '3', fWord: 'Jellyfish', bImgId: '3', bText: 'Close the book', bTime: ''}, 
-            {fId: '4', fWord: 'Eel', bImgId: '', bText: 'What is it?', bTime: ''}, 
-            {fId: '5', fWord: 'Starfish', bImgId: '5', bText: "It's a book.", bTime: '5'},
-            {fId: '6', fWord: 'Parrot', bImgId: '6', bText: 'Look, a butterfly!', bTime: '20'},
-            {fId: '7', fWord: 'Snake', bImgId: '7', bText: 'Wow!', bTime: '8'},
-            {fId: '8', fWord: 'Shark', bImgId: '8', bText: 'Sit down Misty.', bTime: ''},
-            {fId: '9', fWord: 'Dolphin', bImgId: '9', bText: 'Close your eyes.', bTime: '12'},
-            {fId: '10', fWord: 'Hamster', bImgId: '10', bText: 'Sit here please, butterfly', bTime: ''},
-            {fId: '11', fWord: 'Cat', bImgId: '', bText: 'Stand up Misty.', bTime: '10'},
-            {fId: '12', fWord: 'Dog', bImgId: '12', bText: 'Open your eyes.', bTime: '15'},
-            {fId: '13', fWord: 'Turtle', bImgId: '', bText: 'Look!', bTime: ''},
-            {fId: '14', fWord: 'Rabbit', bImgId: '14', bText: "It's beautiful.", bTime: '25'},
-            {fId: '15', fWord: 'Duck', bImgId: '15', bText: 'Where are you mom?', bTime: '10'},
-            {fId: '16', fWord: 'Frog', bImgId: '16', bText: 'Shush! Be quiet please!', bTime: '7'},
-            {fId: '17', fWord: 'Elephant', bImgId: '', bText: "What's your name?", bTime: '10'},
-            {fId: '18', fWord: 'Monkey', bImgId: '18', bText: "That's cool Whisper!", bTime: ''},
-            {fId: '19', fWord: 'Zebra', bImgId: '19', bText: "It's a sunny day.", bTime: '12'},
-            {fId: '20', fWord: 'Giraffe', bImgId: '', bText: 'I like playing games.', bTime: '15'}
+            {fId: '', fWord: 'Snail', bImgId: '', bText: 'Stand up', bTime: '10'}, 
+            {fId: '', fWord: 'Seahorse', bImgId: '', bText: 'Open the book', bTime: '15'}, 
+            {fId: '', fWord: 'Jellyfish', bImgId: '', bText: 'Close the book', bTime: ''}, 
+            {fId: '', fWord: 'Eel', bImgId: '', bText: 'What is it?', bTime: ''}, 
+            {fId: '', fWord: 'Starfish', bImgId: '', bText: "It's a book.", bTime: '5'}, 
+            {fId: '', fWord: 'Parrot', bImgId: '', bText: 'Look, a butterfly!', bTime: '20'}, 
+            {fId: '', fWord: 'Snake', bImgId: '', bText: 'Wow!', bTime: '8'}, 
+            {fId: '', fWord: 'Shark', bImgId: '', bText: 'Sit down Misty.', bTime: ''}, 
+            {fId: '', fWord: 'Dolphin', bImgId: '', bText: 'Close your eyes.', bTime: '12'}, 
+            {fId: '', fWord: 'Hamster', bImgId: '', bText: 'Sit here please, butterfly', bTime: ''}, 
+            {fId: '', fWord: 'Cat', bImgId: '', bText: 'Stand up Misty.', bTime: '10'}, 
+            {fId: '', fWord: 'Dog', bImgId: '', bText: 'Open your eyes.', bTime: '15'}, 
+            {fId: '', fWord: 'Turtle', bImgId: '', bText: 'Look!', bTime: ''}, 
+            {fId: '', fWord: 'Rabbit', bImgId: '', bText: "It's beautiful.", bTime: '25'}, 
+            {fId: '', fWord: 'Duck', bImgId: '', bText: 'Where are you mom?', bTime: '10'}, 
+            {fId: '', fWord: 'Frog', bImgId: '', bText: 'Shush! Be quiet please!', bTime: '7'}, 
+            {fId: '', fWord: 'Elephant', bImgId: '', bText: "What's your name?", bTime: '10'}, 
+            {fId: '', fWord: 'Monkey', bImgId: '', bText: "That's cool Whisper!", bTime: ''}, 
+            {fId: '', fWord: 'Zebra', bImgId: '', bText: "It's a sunny day.", bTime: '12'}, 
+            {fId: '', fWord: 'Giraffe', bImgId: '', bText: 'I like playing games.', bTime: '15'} 
         ];
 
 

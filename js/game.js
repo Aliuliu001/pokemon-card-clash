@@ -995,6 +995,9 @@
             else if (CARDS_PER_TEAM === 20) gridClass = 'grid-cols-4 sm:grid-cols-5';
 
             board.className = `grid ${gridClass} gap-x-1 gap-y-4 sm:gap-x-1.5 sm:gap-y-6 md:gap-x-2 md:gap-y-8 lg:gap-y-10 perspective flex-1 pt-4 sm:pt-6 lg:pt-8 mt-1`;
+            // Số hàng thẻ — CSS dùng để co thẻ vừa chiều cao màn hình (không phải cuộn xuống)
+            const cardRowsForHeight = (CARDS_PER_TEAM === 9) ? 3 : (CARDS_PER_TEAM === 12) ? 3 : 4;
+            board.style.setProperty('--card-rows', cardRowsForHeight);
             board.innerHTML = '';
             
             let currentFronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5); 
@@ -1005,10 +1008,21 @@
                 const inner = document.createElement('div'); inner.className = 'card-inner w-full h-full relative transform-style-3d rounded-lg';
 
                 let frontItem = currentFronts.pop(); 
-                if (!frontItem) { currentFronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5); frontItem = currentFronts.pop() || { word: "Missing", idStr: "" }; }
+                if (!frontItem) { currentFronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5); frontItem = currentFronts.pop() || { word: "", idStr: "" }; }
                 
                 let backItem = currentBacks.pop(); 
-                if (!backItem) { currentBacks = [...backItemsDatabase].sort(() => Math.random() - 0.5); backItem = currentBacks.pop() || { text: "Missing Data", imgId: "", time: "" }; }
+                if (!backItem) { currentBacks = [...backItemsDatabase].sort(() => Math.random() - 0.5); backItem = currentBacks.pop() || { text: "", imgId: "", time: "" }; }
+
+                // KHÔNG BAO GIỜ hiện "Missing Data":
+                // - Mặt SAU trống → tự lặp lại mặt TRƯỚC (thẻ chỉ có từ/ảnh vẫn chơi được, lật lên ôn lại + điểm)
+                // - Mặt TRƯỚC trống → tự lấy mặt SAU
+                const poolOnlyIds = (idStr) => (idStr || '').split(',').filter(id => id && imagesPool[id]).join(',');
+                if (!backItem.text && !backItem.imgId && (frontItem.word || frontItem.idStr)) {
+                    backItem = { text: frontItem.word, imgId: poolOnlyIds(frontItem.idStr), time: backItem.time || "" };
+                }
+                if (!frontItem.word && !frontItem.idStr && (backItem.text || backItem.imgId)) {
+                    frontItem = { word: backItem.text, idStr: poolOnlyIds(backItem.imgId) };
+                }
                 
                 const cover = document.createElement('div'); cover.className = `absolute inset-0 backface-hidden rounded-lg card-cover theme-card bg-white`;
                 

@@ -79,3 +79,23 @@
   - ID `999` chưa có ảnh → ô đỏ + cảnh báo; upload 999.png → hết đỏ, thẻ có ảnh ngay ✔ (cảnh báo 19 → 18 ô)
   - Kéo thả: class sáng hiện đúng khi dragover, ảnh vào kho, class tắt sau drop ✔
   - Toàn bộ phiên: 0 lỗi JavaScript.
+
+
+## Giai đoạn 8: Sửa lõi game + layout vừa màn hình (2026-10-18)
+- **Vấn đề (rà soát thật trên trình duyệt + soi code):**
+  1. **"Missing Data" đỏ陋 khi chỉ dùng mặt trước:** bảng có 2 vế độc lập (mặt trước lấy hàng có Từ/ID Trước, mặt sau lấy hàng có Chữ/ID Sau). Hàng không có vế sau → lật thẻ hiện "Missing Data".
+  2. **Bảng mẫu trỏ ảnh không tồn tại:** Front-side/ có file 6→39, Back-side/ có file 40→71, nhưng bảng mẫu trỏ ID 1→20/1→19 → mở game lần đầu 10/40 ảnh hiện "Missing". (Ảnh mặc định là cảnh/ chữ tiếng Anh — KHÔNG phải con vật như từ mẫu, nên không ghép bừa.)
+  3. **Trang cao hơn màn hình:** bàn chơi ~1120px, laptop 13"/máy ở lớp (633-768px) phải cuộn xuống mới thấy hết 2 đội + nút Restart.
+  4. Giá trị giả lúc tải: đồng hồ "01:13", điểm "10", Flipped "1/2", khiên tràn 9px ra mép trái.
+- **Giải pháp:**
+  - **Mặt sau tự lặp mặt trước:** hàng không có dữ liệu sau → lật lên hiện lại từ/ảnh của mặt trước (thẻ 1 mặt vẫn chơi được, vẫn +điểm). Ngược lại mặt trước trống → lấy mặt sau. **Không bao giờ còn "Missing Data".** (Giữ random ghép cặp trước/sau như cũ theo chọn lọc của thầy.)
+  - **Bảng mẫu chỉ dùng từ vựng + câu lệnh** (không trỏ ảnh bừa). Thầy upload ảnh thật rồi điền ID thì thẻ có ảnh.
+  - **Layout fit màn hình:** thẻ tự co `max-height` theo `100vh` (công thức trừ phần cố định: timer, header 2 đội, Restart, lề). Màn thấp (<920px cao) thêm thu gọn đồng hồ/avatar/lề Restart. Kích hoạt từ màn rộng ≥768px.
+  - Sửa "giá trị giả": 00:00, điểm 0, Flipped 0; khiên không còn tràn mép.
+- **Kết quả test thật:**
+  - Data mẫu mới: 0 ảnh Missing, lật thẻ hiện "Close your eyes." không còn "Missing Data" ✔
+  - Chỉ có Front (20 hàng): lật 3 thẻ → hiện đúng TU_TRUOC_x, không Missing ✔
+  - Chỉ có Back: mặt trước tự lấy CAU_SAU_x, lật ra đúng ✔
+  - Vừa màn hình: 1920×1080 / 1366×768 / 1280×633 → 0 tràn dọc, thẻ 176×140 / 120×62 / 112×60 ✔
+  - 0 lỗi JavaScript.
+- **Lưu ý (giữ nguyên theo chọn lọc):** ghép cặp trước/sau khi lật vẫn RANDOM (2 vế độc lập) như thiết kế cũ; cửa sổ Cài đặt vẫn mở sẵn khi vào trang.
