@@ -43,4 +43,22 @@
   - JPG chụp: 47KB → **7KB** ✔
   - Ảnh nhỏ hơn 400px: nén ra to hơn file gốc → giữ file gốc ✔
   - Test lưới an toàn: giả lập WebP làm đục nền → trả `false` → rơi về PNG ✔
-  - Upload thật 30 ảnh liên tục: 1.6 giây, trung bình **11KB/ảnh** → 150 ảnh ≈ 1.6MB + JSON ~2.1MB (vẫn trong giới hạn 5MB, và Bước 2 sẽ chuyển sang kho lớn hơn nữa).
+  - 30 ảnh liên tục: 1.6 giây, trung bình **11KB/ảnh** → 150 ảnh ≈ 1.6MB + JSON ~2.1MB (vẫn trong giới hạn 5MB, và Bước 2 sẽ chuyển sang kho lớn hơn nữa).
+
+## Giai đoạn 6: Kho ảnh chuyển sang IndexedDB + chống mất dữ liệu (Bước 2 lộ trình 100+ ảnh)
+- **Vấn đề:** Kho ảnh nằm trong localStorage (~5MB). Hết chỗ là game im lặng không lưu → thầy tắt trang là mất ảnh, không cảnh báo. Ngoài ra trình duyệt chặn localStorage (file:// mở trong app Zalo, chế độ riêng tư) làm game chết trắng ngay dòng đầu.
+- **Giải pháp:**
+  - **IndexedDB (kho lớn):** toàn bộ kho ảnh chuyển sang IndexedDB (nghìn MB). Ví dụ thật: 10GB quota trên máy test.
+  - **Tự dời nhà:** ảnh cũ đang trong localStorage được chuyển sang IndexedDB tự động khi mở trang, bản cũ dọn đi. Nếu cả 2 nơi cùng có (trường hợp hiếm) → GỘP, không bỏ bên nào.
+  - **SafeStore:** mọi truy cập localStorage bọc try/catch — trình duyệt chặn storage game vẫn chạy bình thường.
+  - **Hiện dung lượng:** mục Nguồn Ảnh có thêm dòng `📦 1.6MB / 10.0GB`.
+  - **Hết chỗ thật → LA RỎ:** hộp thoại đỏ hướng dẫn xuất file HTML hoặc xóa bớt, thay vì im lặng bỏ qua như trước.
+  - **Gõ chữ mượt hơn:** autoSave không còn serialize lại cả kho ảnh mỗi lần gõ (ảnh lưu riêng qua `saveImagesPool()`).
+  - **Nạp ảnh trước khi vẽ game:** hàm khởi động chờ `loadImagesPool()` xong mới `initGame()` → thẻ không hiện "Missing" oan.
+- **Kết quả test thật:**
+  - Upload 150 ảnh → IndexedDB đủ 150 → **reload vẫn 150/150**, hiển thị `150 ảnh | 📦 1.6MB / 10.0GB` ✔
+  - Di cư: seed 10 ảnh kiểu cũ vào localStorage → mở trang → 10/10 vào IndexedDB, localStorage tự dọn ✔
+  - Chặn localStorage (giống Zalo mở file): game vẫn chạy 40 thẻ, kho ảnh nạp đủ từ IndexedDB ✔
+  - Nút Clear ghi đúng vào kho lớn (IDB = 0) ✔
+  - 0 lỗi JavaScript trong toàn bộ phiên test.
+- **🚨 Phát hiện mới khi test (chưa sửa, cần anh duyệt):** File HTML xuất ra (📥 Tải File HTML) **không chứa code game** — nó trỏ ra `js/game.js` ở ngoài. Gửi 1 file .html đơn lẻ cho học sinh là mở lên chết. (Trước refactoring Giai đoạn 1 thì code gộp 1 file nên vẫn chạy; sau khi tách file thì lỗi này sinh ra.) Việc này sẽ sửa ở bước xuất file.

@@ -18,6 +18,141 @@
         const gridBody = document.getElementById('data-grid-body');
         const specialCardsList = document.getElementById('special-cards-list');
 
+        // --- LỚP CHỐNG MẤT DỮ LIỆU (Bước 2) ---
+        // SafeStore: trình duyệt chặn localStorage (file:// mở trong app Zalo, chế độ riêng tư...)
+        // cũng KHÔNG làm game chết — mọi truy cập đều bọc try/catch.
+        const SafeStore = {
+            get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+            set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+            remove(k) { try { localStorage.removeItem(k); } catch (e) { } }
+        };
+
+        // Kho ảnh lớn (IndexedDB): chứa được nghìn MB thay vì 5MB của localStorage
+        const ImageDB = (() => {
+            const DB_NAME = 'PokemonCardClashImages';
+            const STORE = 'pools';
+            let dbPromise = null;
+            function open() {
+                if (dbPromise) return dbPromise;
+                dbPromise = new Promise((resolve, reject) => {
+                    if (!window.indexedDB) { reject(new Error('no-idb')); return; }
+                    let req;
+                    try { req = indexedDB.open(DB_NAME, 1); } catch (e) { reject(e); return; }
+                    req.onupgradeneeded = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error || new Error('idb-open-fail'));
+                    req.onblocked = () => reject(new Error('idb-blocked'));
+                });
+                dbPromise.catch(() => { dbPromise = null; }); // lỗi thì lần sau được thử lại
+                return dbPromise;
+            }
+            async function get(key) {
+                const db = await open();
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+            async function set(key, val) {
+                const db = await open();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE, 'readwrite');
+                    tx.objectStore(STORE).put(val, key);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => reject(tx.error);
+                    tx.onabort = () => reject(tx.error || new Error('idb-abort'));
+                });
+            }
+            async function del(key) {
+                const db = await open();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE, 'readwrite');
+                    tx.objectStore(STORE).delete(key);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+            return { get, set, del };
+        })();
+
+        function imagesStorageKey() {
+            return window.INJECTED_GAME_STATE ? 'pokemonClashImages_' + window.INJECTED_GAME_STATE.id : 'pokemonClashImages_main';
+        }
+
+        // Nạp kho ảnh lúc mở trang: IndexedDB → chỗ cũ (localStorage, tự dời nhà) → file HTML nhúng
+        async function loadImagesPool() {
+            const key = imagesStorageKey();
+            let idbPool = null;
+            try { idbPool = await ImageDB.get(key); } catch (e) { console.warn('IndexedDB đọc lỗi:', e); }
+            idbPool = (idbPool && typeof idbPool === 'object') ? idbPool : null;
+
+            let lsPool = null;
+            const ls = SafeStore.get(key);
+            if (ls) {
+                try { lsPool = JSON.parse(ls); } catch (e) { lsPool = null; }
+                if (!lsPool || typeof lsPool !== 'object') lsPool = null;
+            }
+
+            if (idbPool && lsPool) {
+                // Cả 2 nơi cùng có (trường hợp hiếm: tab cũ song song) → GỘP, không bỏ bên nào
+                imagesPool = Object.assign({}, idbPool, lsPool);
+                try { await ImageDB.set(key, imagesPool); } catch (e) { }
+                SafeStore.remove(key);
+            } else if (idbPool) {
+                imagesPool = idbPool;
+                SafeStore.remove(key); // dọn bản cũ còn sót trong localStorage
+            } else if (lsPool) {
+                imagesPool = lsPool;
+                try { await ImageDB.set(key, lsPool); SafeStore.remove(key); } catch (e) { /* giữ bản cũ nếu không dời được */ }
+            } else if (window.INJECTED_GAME_STATE && window.INJECTED_GAME_STATE.imagesPool) {
+                imagesPool = window.INJECTED_GAME_STATE.imagesPool;
+            } else {
+                imagesPool = {};
+            }
+        }
+
+        // Lưu kho ảnh: ưu tiên IndexedDB, trượt thì về localStorage, hết chỗ thật → LA RÕ
+        async function saveImagesPool() {
+            const key = imagesStorageKey();
+            try {
+                await ImageDB.set(key, imagesPool);
+                SafeStore.remove(key); // đã có bản lớn → dọn bản 5MB cũ
+                return true;
+            } catch (e) {
+                console.warn('IndexedDB ghi lỗi, thử localStorage:', e);
+            }
+            if (SafeStore.set(key, JSON.stringify(imagesPool))) return true;
+            alert('⚠️ BỘ NHỚ TRÌNH DUYỆT ĐÃ HẾT!\n\nKho ảnh KHÔNG thể lưu thêm được nữa.\n\nCách xử lý:\n• Bấm 📥 Tải File HTML — ảnh được nhét thẳng vào file, không mất;\n• hoặc bấm Clear để xóa bớt ảnh trong Nguồn Ảnh.');
+            return false;
+        }
+
+        // Cập nhật số lượng + dung lượng kho ảnh lên giao diện: "12 ảnh  📦 0.5MB / 480MB"
+        async function updatePoolUI() {
+            const count = Object.keys(imagesPool || {}).length;
+            const countEl = document.getElementById('image-pool-count');
+            if (countEl) countEl.innerText = count + ' ảnh';
+            const sizeEl = document.getElementById('image-pool-size');
+            if (!sizeEl) return;
+            let bytes = 0;
+            for (const k in imagesPool) { const v = imagesPool[k]; if (typeof v === 'string') bytes += v.length * 0.75; }
+            const fmt = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + 'GB'
+                         : b >= 1048576 ? (b / 1048576).toFixed(1) + 'MB'
+                         : Math.max(1, Math.round(b / 1024)) + 'KB';
+            let quotaStr = '';
+            try {
+                if (navigator.storage && navigator.storage.estimate) {
+                    const est = await navigator.storage.estimate();
+                    if (est && est.quota) quotaStr = ' / ' + fmt(est.quota);
+                }
+            } catch (e) { }
+            sizeEl.innerText = '📦 ' + fmt(bytes) + quotaStr;
+        }
+
+
         // --- CƠ CHẾ AUTO-SAVE TRÁNH MẤT DỮ LIỆU ---
         function autoSave() {
             const row0 = document.querySelector(`input[data-row="0"][data-col="0"]`);
@@ -47,15 +182,10 @@
 
             let STORAGE_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashDataJSON_' + window.INJECTED_GAME_STATE.id : 'pokemonClashDataJSON_main';
             let SETTINGS_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashSettings_' + window.INJECTED_GAME_STATE.id : 'pokemonClashSettings_main';
-            let IMAGES_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashImages_' + window.INJECTED_GAME_STATE.id : 'pokemonClashImages_main';
-            
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
-            try {
-                localStorage.setItem(IMAGES_KEY, JSON.stringify(imagesPool));
-            } catch (e) {
-                console.warn("Lỗi lưu ảnh vào localStorage (có thể do quá lớn): ", e);
-            }
+            // Ghi chú: kho ẢNH không lưu ở đây nữa — ảnh lưu qua saveImagesPool() (IndexedDB).
+            // Nhờ vậy gõ chữ trong bảng không phải serialize lại cả kho ảnh → gõ mượt.
+            SafeStore.set(STORAGE_KEY, JSON.stringify(newData));
+            SafeStore.set(SETTINGS_KEY, JSON.stringify(currentSettings));
         }
 
         let autoSaveTimeout;
@@ -161,51 +291,39 @@
             let parsedData;
             let STORAGE_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashDataJSON_' + window.INJECTED_GAME_STATE.id : 'pokemonClashDataJSON_main';
             let SETTINGS_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashSettings_' + window.INJECTED_GAME_STATE.id : 'pokemonClashSettings_main';
-            let IMAGES_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashImages_' + window.INJECTED_GAME_STATE.id : 'pokemonClashImages_main';
 
-            let savedDataStr = localStorage.getItem(STORAGE_KEY);
-            let savedSettingsStr = localStorage.getItem(SETTINGS_KEY);
-            let savedImagesStr = localStorage.getItem(IMAGES_KEY);
+            let savedDataStr = SafeStore.get(STORAGE_KEY);
+            let savedSettingsStr = SafeStore.get(SETTINGS_KEY);
+            // ẢNH: không đọc từ localStorage ở đây nữa — kho đã nạp 1 lần lúc mở trang
+            // (loadImagesPool, IndexedDB). Tránh đọc nhầm bản 5MB cũ còn sót ghi đè mất ảnh.
 
-            if (savedImagesStr) {
-                try {
-                    imagesPool = JSON.parse(savedImagesStr);
-                } catch (e) {
-                    console.error("Lỗi parse imagesPool", e);
-                }
-            } else if (window.INJECTED_GAME_STATE && window.INJECTED_GAME_STATE.imagesPool) {
-                imagesPool = window.INJECTED_GAME_STATE.imagesPool;
-            }
-            
-            // Cập nhật số lượng ảnh lên UI
-            const imgCount = Object.keys(imagesPool || {}).length;
-            const imgCountEl = document.getElementById('image-pool-count');
-            if (imgCountEl) imgCountEl.innerText = imgCount + " ảnh";
+            // Cập nhật số lượng + dung lượng kho ảnh lên UI
+            updatePoolUI();
 
             // --- Di cư dữ liệu cũ (MIGRATION cho máy chủ) ---
-            if (!savedDataStr && !window.INJECTED_GAME_STATE && localStorage.getItem('pokemonClashDataJSON')) {
-                let oldData = localStorage.getItem('pokemonClashDataJSON');
+            if (!savedDataStr && !window.INJECTED_GAME_STATE && SafeStore.get('pokemonClashDataJSON')) {
+                let oldData = SafeStore.get('pokemonClashDataJSON');
                 parsedData = JSON.parse(oldData);
                 
                 let oldFront = 'both', oldBack = 'full';
-                let oldDisp = localStorage.getItem('pokemonClashDisplayMode');
+                let oldDisp = SafeStore.get('pokemonClashDisplayMode');
                 if(oldDisp) { let d = JSON.parse(oldDisp); oldFront = d.front; oldBack = d.back; }
                 
                 let oldCards = 20;
-                let oldC = localStorage.getItem('pokemonClashCardsCount');
+                let oldC = SafeStore.get('pokemonClashCardsCount');
                 if(oldC) oldCards = parseInt(oldC);
 
                 let oldTime = 180;
-                let oldT = localStorage.getItem('pokemonClashGlobalTime');
+                let oldT = SafeStore.get('pokemonClashGlobalTime');
                 if(oldT) oldTime = parseInt(oldT);
 
                 let oldEnabled = true;
-                let oldE = localStorage.getItem('pokemonClashTimerEnabled');
+                let oldE = SafeStore.get('pokemonClashTimerEnabled');
                 if(oldE !== null) oldEnabled = (oldE === 'true');
 
                 // Lưu sang key mới định dạng an toàn
-                localStorage.setItem(STORAGE_KEY, oldData);
-                localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+                SafeStore.set(STORAGE_KEY, oldData);
+                SafeStore.set(SETTINGS_KEY, JSON.stringify({
                     cardsCount: oldCards,
                     displayMode: { front: oldFront, back: oldBack },
                     globalTime: oldTime,
@@ -214,14 +332,14 @@
                 }));
                 
                 // Xóa key cũ dọn rác
-                localStorage.removeItem('pokemonClashDataJSON');
-                localStorage.removeItem('pokemonClashDisplayMode');
-                localStorage.removeItem('pokemonClashCardsCount');
-                localStorage.removeItem('pokemonClashGlobalTime');
-                localStorage.removeItem('pokemonClashTimerEnabled');
+                SafeStore.remove('pokemonClashDataJSON');
+                SafeStore.remove('pokemonClashDisplayMode');
+                SafeStore.remove('pokemonClashCardsCount');
+                SafeStore.remove('pokemonClashGlobalTime');
+                SafeStore.remove('pokemonClashTimerEnabled');
                 
                 savedDataStr = oldData;
-                savedSettingsStr = localStorage.getItem(SETTINGS_KEY);
+                savedSettingsStr = SafeStore.get(SETTINGS_KEY);
             }
 
             // --- NẠP SETTINGS ---
@@ -1753,7 +1871,11 @@
 
         document.getElementById('btn-reset').addEventListener('click', initGame);
         document.getElementById('btn-end-early').addEventListener('click', triggerWinCelebration);
-        initGame();
+        // Nạp kho ảnh (IndexedDB) TRƯỚC khi vẽ game lần đầu, để thẻ bài không hiện "Missing"
+        (async () => {
+            try { await loadImagesPool(); } catch (e) { console.error('Nạp kho ảnh lỗi:', e); }
+            initGame();
+        })();
         
         btnSkip.addEventListener('click', (e) => { e.preventDefault(); skipHandler(true); });
         btnSkip.addEventListener('touchstart', (e) => { e.preventDefault(); skipHandler(true); }, { passive: false });
@@ -1795,18 +1917,22 @@
                 if (poolCountEl) poolCountEl.innerText = imgCount + " ảnh";
                 btnUploadImages.innerHTML = '<span class="text-lg leading-none">⬆️</span> Upload Images';
                 autoSave();
+                await saveImagesPool();   // ẢNH: lưu vào kho lớn (IndexedDB)
+                updatePoolUI();
                 
                 imageUploadInput.value = '';
             });
         }
 
         if (btnClearImages) {
-            btnClearImages.addEventListener('click', () => {
+            btnClearImages.addEventListener('click', async () => {
                 if (confirm('Bạn có chắc chắn muốn xóa toàn bộ ảnh trong Nguồn Ảnh?')) {
                     imagesPool = {};
                     const poolCountEl = document.getElementById('image-pool-count');
                     if (poolCountEl) poolCountEl.innerText = "0 ảnh";
                     autoSave();
+                    await saveImagesPool(); // xóa ảnh cũng phải ghi vào kho lớn
+                    updatePoolUI();
                 }
             });
         }
