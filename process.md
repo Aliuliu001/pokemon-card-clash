@@ -29,3 +29,18 @@
 - Đã tạo file `.gitignore` để tránh commit rác.
 - Đã soạn thảo tài liệu `README.md` cung cấp hướng dẫn đầy đủ từ A-Z cho giáo viên cách tạo bài học và sử dụng game.
 - (Đang tiến hành) Hỗ trợ đẩy mã nguồn lên kho lưu trữ GitHub (Repository: `pokemon-card-clash`) để cấu hình GitHub Pages, cung cấp đường link chơi Online trực tiếp.
+
+## Giai đoạn 5: Nén ảnh thế hệ mới — WebP có kiểm tra (Bước 1 lộ trình 100+ ảnh)
+- **Vấn đề:** Nén PNG 400px mỗi ảnh ~70-250KB → chạm giới hạn bộ nhớ trình duyệt (~5MB) chỉ sau ~30-35 ảnh. Không thể upload 100+ ảnh.
+- **Giải pháp (không đổi thao tác của giáo viên — vẫn xuất PNG/JPG từ Canva rồi Upload như cũ):**
+  - Ưu tiên nén sang **WebP** (nhỏ hơn PNG 4-6 lần) ngay trong trình duyệt.
+  - **Kiểm tra kênh alpha thật:** đọc từng pixel của ảnh gốc, rồi giải mã lại ảnh WebP vừa nén — vùng nào vốn trong suốt mà bị đục là bỏ WebP, rơi về PNG (giữ trong suốt 100%). Ảnh không có alpha (JPG chụp) → dùng JPEG.
+  - Trình duyệt không nén được WebP → tự nhận PNG/JPEG. Ảnh nén ra to hơn file gốc → giữ nguyên file gốc. Không có đường nào mất ảnh hay to hơn cũ.
+  - Ghi chú Giai đoạn 3 (nền đen) được giải quyết đúng cách lần này: không phải "cấm WebP", mà vẫn dùng WebP nhưng **kiểm tra alpha thật sau khi nén**, hỏng là rơi về PNG.
+- **Kết quả test thật (trình duyệt Chrome):**
+  - PNG trong suốt 1000px: 73KB → **13KB** (WebP, góc trong suốt vẫn alpha=0 ✔)
+  - PNG trong suốt 3000px: 253KB → **6KB** ✔
+  - JPG chụp: 47KB → **7KB** ✔
+  - Ảnh nhỏ hơn 400px: nén ra to hơn file gốc → giữ file gốc ✔
+  - Test lưới an toàn: giả lập WebP làm đục nền → trả `false` → rơi về PNG ✔
+  - Upload thật 30 ảnh liên tục: 1.6 giây, trung bình **11KB/ảnh** → 150 ảnh ≈ 1.6MB + JSON ~2.1MB (vẫn trong giới hạn 5MB, và Bước 2 sẽ chuyển sang kho lớn hơn nữa).

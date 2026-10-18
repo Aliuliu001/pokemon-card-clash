@@ -1783,7 +1783,7 @@
                     let id = dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName;
                     
                     try {
-                        let base64 = await compressImage(file, 400, 1.0);
+                        let base64 = await compressImage(file, 400, 0.85);
                         imagesPool[id] = base64;
                     } catch(err) {
                         console.error("Lỗi xử lý ảnh: " + file.name, err);
@@ -1811,34 +1811,112 @@
             });
         }
 
+        // --- NÉN ẢNH THẾ HỆ MỚI (Bước 1) ---
+        // Ưu tiên WebP (nhỏ hơn PNG 4-6 lần) → kiểm tra KÊNH ALPHA thật bằng cách
+        // giải mã lại ảnh vừa nén: vùng nào trong suốt mà bị đục là hỏng, bỏ WebP,
+        // rơi về PNG (giữ trong suốt 100%) nếu có alpha, JPEG nếu không có alpha.
+        // Trình duyệt không hỗ trợ WebP/JPEG sẽ tự động nhận PNG. Không bao giờ
+        // lưu được gì to hơn file gốc: nén ra lớn hơn thì giữ nguyên file gốc.
+        function safeToDataURL(canvas, type, quality) {
+            try {
+                const url = canvas.toDataURL(type, quality);
+                return (url && url.startsWith('data:image/')) ? url : null;
+            } catch (e) { return null; }
+        }
+
+        // Giải mã lại ảnh vừa nén, đảm bảo vùng trong suốt vẫn trong suốt
+        function verifyAlphaPreserved(dataUrl, srcAlpha, width, height) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const c = document.createElement('canvas');
+                        c.width = width; c.height = height;
+                        const cx = c.getContext('2d');
+                        cx.drawImage(img, 0, 0, width, height);
+                        const out = cx.getImageData(0, 0, width, height).data;
+                        const step = Math.max(4, Math.floor((srcAlpha.length / 4) / 3000) * 4);
+                        for (let i = 3; i < srcAlpha.length; i += step) {
+                            if (srcAlpha[i] < 10 && out[i] > 200) return resolve(false);
+                        }
+                        resolve(true);
+                    } catch (e) { resolve(false); }
+                };
+                img.onerror = () => resolve(false);
+                img.src = dataUrl;
+            });
+        }
+
         function compressImage(file, maxSize, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = event => {
+                    const originalDataUrl = event.target.result;
                     const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        if (width > maxSize || height > maxSize) {
-                            if (width > height) {
-                                height = Math.round(height *= maxSize / width);
-                                width = maxSize;
-                            } else {
-                                width = Math.round(width *= maxSize / height);
-                                height = maxSize;
+                    img.src = originalDataUrl;
+                    img.onload = async () => {
+                        try {
+                            let width = img.width;
+                            let height = img.height;
+                            if (!width || !height) { return resolve(originalDataUrl); }
+
+                            if (width > maxSize || height > maxSize) {
+                                if (width > height) {
+                                    height = Math.round(height *= maxSize / width);
+                                    width = maxSize;
+                                } else {
+                                    width = Math.round(width *= maxSize / height);
+                                    height = maxSize;
+                                }
                             }
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Kiểm tra kênh alpha THẬT trên từng pixel (không đoán theo tên file)
+                            let hasAlpha = false;
+                            let srcAlpha = null;
+                            try {
+                                srcAlpha = ctx.getImageData(0, 0, width, height).data;
+                                for (let i = 3; i < srcAlpha.length; i += 4) {
+                                    if (srcAlpha[i] < 250) { hasAlpha = true; break; }
+                                }
+                            } catch (e) {
+                                hasAlpha = true; // không đọc được pixel → chọn đường an toàn (giữ alpha)
+                            }
+
+                            // Ưu tiên WebP, nhưng chỉ dùng khi kiểm tra alpha qua được
+                            let result = null;
+                            const webpUrl = safeToDataURL(canvas, 'image/webp', quality);
+                            if (webpUrl && webpUrl.startsWith('data:image/webp')) {
+                                const alphaOk = hasAlpha ? await verifyAlphaPreserved(webpUrl, srcAlpha, width, height) : true;
+                                if (alphaOk) result = webpUrl;
+                            }
+
+                            // Fallback: có alpha → PNG, không alpha → JPEG, hỏng hết → file gốc
+                            if (!result) {
+                                if (hasAlpha) {
+                                    result = safeToDataURL(canvas, 'image/png') || originalDataUrl;
+                                } else {
+                                    result = safeToDataURL(canvas, 'image/jpeg', quality)
+                                          || safeToDataURL(canvas, 'image/png')
+                                          || originalDataUrl;
+                                }
+                            }
+
+                            // Chốt: nén ra to hơn file gốc thì giữ file gốc
+                            if (result !== originalDataUrl && result.length > originalDataUrl.length) {
+                                result = originalDataUrl;
+                            }
+
+                            resolve(result);
+                        } catch (e) {
+                            reject(e);
                         }
-                        
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        resolve(canvas.toDataURL('image/png'));
                     };
                     img.onerror = error => reject(error);
                 };
