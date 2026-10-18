@@ -7,6 +7,7 @@ Một dự án minigame giáo dục dạng lật thẻ bài được thiết k�
 - **Chạy hoàn toàn trên trình duyệt:** Không cần cài đặt, không cần server. Hoạt động trên mọi thiết bị (máy tính, điện thoại, máy tính bảng).
 - **Giao diện thân thiện, hiện đại:** Sử dụng TailwindCSS cho giao diện bắt mắt, hiệu ứng 3D lật thẻ bài mượt mà.
 - **Tính năng Nguồn Ảnh (Image Pool):** Tải ảnh `.png`, `.jpg` trực tiếp từ máy tính lên game. Hệ thống sẽ tự động nén ảnh dưới định dạng siêu nhẹ (WebP/PNG) để đảm bảo game không bị giật lag và không bị lỗi bộ nhớ trình duyệt. Hỗ trợ hoàn hảo cho ảnh trong suốt (transparent background).
+- **Kho ảnh trực quan:** Kéo thả ảnh vào game, xem toàn bộ ảnh dưới dạng thumbnail, xóa từng ảnh hoặc nhiều ảnh một lúc. Ô ID nào thiếu ảnh sẽ tự tô đỏ trước khi lên lớp.
 - **Tùy chỉnh đa dạng:** Cho phép thay đổi số lượng thẻ bài, thời gian đếm ngược, và cách thức hiển thị (mặt trước/mặt sau).
 
 ## 🚀 Hướng Dẫn Sử Dụng (Dành cho Giáo viên)

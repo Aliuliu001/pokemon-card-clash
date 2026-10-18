@@ -62,3 +62,20 @@
   - Nút Clear ghi đúng vào kho lớn (IDB = 0) ✔
   - 0 lỗi JavaScript trong toàn bộ phiên test.
 - **🚨 Phát hiện mới khi test:** File HTML xuất ra **không chứa code game** — nó trỏ ra `js/game.js` ở ngoài, gửi 1 file .html đơn lẻ là mở lên chết. **→ Quyết định: bỏ hẳn tính năng Xuất File HTML** (giáo viên chơi tại lớp qua link, không tải file về copy sang trung tâm khác cho đỡ tốn công). Nút 📥 và toàn bộ code export đã xóa.
+
+
+## Giai đoạn 7: Kho ảnh hoàn chỉnh — kéo thả, thumbnail, ID thiếu ảnh (Bước 3)
+- **Giải pháp:**
+  - **Kéo thả THẬT:** kéo file ảnh vào khung Nguồn Ảnh (viền xanh sáng khi kéo tới). Thả nhầm ngoài vùng → trình duyệt không mở file (giữ nguyên trang).
+  - **🖼️ Kho ảnh (bảng thumbnail):** nút mới cạnh Upload — hiện từng ảnh + ID, sắp theo số (2 đứng trước 10). Bấm thumbnail để chọn (viền cam), nút × xóa 1 ảnh, "Chọn tất cả" + "🗑️ Xóa đã chọn" để xóa hàng loạt. Muốn thay 1 ảnh: chỉ cần upload lại file cùng tên, không phải xóa hết.
+  - **Làm sạch ID:** tên file `" 5 "` → ID `5`, `"12.PNG"` → `12` (bỏ khoảng trắng thừa, không phân biệt hoa thường ở đuôi file).
+  - **Báo lỗi rõ ràng:** file không phải ảnh / HEIC iPhone không đọc được → hiện danh sách file lỗi cụ thể + hướng dẫn lưu lại PNG/JPG (thay vì bỏ qua im lặng). Nút Upload hiện tiến trình "Đang xử lý 12/150...".
+  - **⚠️ ID thiếu ảnh:** quét bảng — ô ID Ảnh không có ảnh thật (trong kho lẫn file cũ) → tô viền đỏ nhấp nháy + đếm tổng số ô thiếu hiện ngay trên bảng kho ảnh. Quét lại tự động khi gõ, khi upload, khi xóa.
+  - **Ảnh hiện ngay sau upload:** thẻ bài tự vẽ lại (chỉ khi ván chưa bắt đầu) — không cần bấm Lưu & Khởi động lại.
+- **Kết quả test thật:**
+  - Upload file `" 5 "`, `"07"`, `"12.PNG"` → ID vào kho đúng `5`, `07`, `12` ✔
+  - File `.txt` + HEIC giả → báo đúng 2 file lỗi kèm lý do ✔
+  - Thumbnail: sắp 1,2,3; × xóa 1 ảnh; chọn hết + xóa hàng loạt; thông báo "Chưa có ảnh" ✔
+  - ID `999` chưa có ảnh → ô đỏ + cảnh báo; upload 999.png → hết đỏ, thẻ có ảnh ngay ✔ (cảnh báo 19 → 18 ô)
+  - Kéo thả: class sáng hiện đúng khi dragover, ảnh vào kho, class tắt sau drop ✔
+  - Toàn bộ phiên: 0 lỗi JavaScript.

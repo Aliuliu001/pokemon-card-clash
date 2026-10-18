@@ -407,6 +407,7 @@
             });
             
             renderGrid(parsedData);
+            scheduleMissingCheck(); // quét ID thiếu ảnh sau khi bảng vẽ xong
         }
 
         // (Đã bỏ tính năng Xuất File HTML theo quyết định của thầy — game chỉ chạy
@@ -1831,43 +1832,242 @@
         const imageUploadInput = document.getElementById('image-upload-input');
         const btnUploadImages = document.getElementById('btn-upload-images');
         const btnClearImages = document.getElementById('btn-clear-images');
-        
+        const poolDropzone = document.getElementById('image-pool-dropzone');
+        const galleryPanel = document.getElementById('image-pool-panel');
+        const galleryGrid = document.getElementById('image-pool-gallery');
+        const folderCheckCache = new Map();
+
+        // Chuẩn hóa ID lấy từ tên file: " 1 " → "1" (kể cả khoảng trắng lặp trong tên)
+        function normalizePoolId(rawId) {
+            return String(rawId).replace(/\s+/g, ' ').trim();
+        }
+
+        function poolEscape(value) {
+            return String(value)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Kiểm tra ảnh có trong file Front-side/Back-side (phương pháp cũ) không — có cache
+        async function folderFileExists(side, id) {
+            const path = `./${side}/${id}.png`;
+            if (folderCheckCache.has(path)) return folderCheckCache.get(path);
+            try {
+                const resp = await fetch(path, { method: 'HEAD' });
+                folderCheckCache.set(path, resp.ok);
+                return resp.ok;
+            } catch (e) {
+                return null; // không kết nối được → không phán xét (tránh báo oan)
+            }
+        }
+
+        // Quét bảng: ô ID Ảnh không có ảnh thật (trong kho lẫn file cũ) → viền đỏ + cảnh báo
+        async function checkMissingImageIds() {
+            const inputs = document.querySelectorAll('input[data-col="0"], input[data-col="2"]');
+            let missing = 0;
+            const jobs = [];
+            inputs.forEach(inp => {
+                const val = (inp.value || '').trim();
+                const side = inp.getAttribute('data-col') === '0' ? 'Front-side' : 'Back-side';
+                const ids = val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+                if (ids.length === 0) {
+                    inp.classList.remove('img-id-missing');
+                    inp.removeAttribute('title');
+                    return;
+                }
+                jobs.push((async () => {
+                    let sureMissing = true; // chỉ kết luận thiếu khi CHẮC CHẮN mọi id đều vắng
+                    for (const id of ids) {
+                        if (imagesPool[id]) { sureMissing = false; break; }
+                        const inFolder = await folderFileExists(side, id);
+                        if (inFolder !== false) { sureMissing = false; break; } // true = có file, null = không rõ
+                    }
+                    if (sureMissing) {
+                        inp.classList.add('img-id-missing');
+                        inp.title = 'Thiếu ảnh ID: ' + ids.join(', ');
+                        missing++;
+                    } else {
+                        inp.classList.remove('img-id-missing');
+                        inp.removeAttribute('title');
+                    }
+                })());
+            });
+            await Promise.all(jobs);
+            const warnEl = document.getElementById('missing-ids-warning');
+            if (warnEl) {
+                if (missing > 0) {
+                    warnEl.classList.remove('hidden');
+                    warnEl.innerText = `⚠️ ${missing} ô ID thiếu ảnh`;
+                } else {
+                    warnEl.classList.add('hidden');
+                    warnEl.innerText = '';
+                }
+            }
+        }
+        let missingCheckTimeout;
+        function scheduleMissingCheck() {
+            clearTimeout(missingCheckTimeout);
+            missingCheckTimeout = setTimeout(checkMissingImageIds, 700);
+        }
+        gridBody.addEventListener('input', scheduleMissingCheck);
+
+        // Vẽ bảng thumbnail kho ảnh (sắp theo số, "2" đứng trước "10")
+        function renderGallery() {
+            if (!galleryGrid) return;
+            const keys = Object.keys(imagesPool).sort((a, b) => {
+                const na = parseFloat(a), nb = parseFloat(b);
+                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                return String(a).localeCompare(String(b), undefined, { numeric: true });
+            });
+            if (keys.length === 0) {
+                galleryGrid.innerHTML = '<div style="grid-column:1/-1" class="text-slate-500 text-xs text-center py-4">Chưa có ảnh nào — bấm ⬆️ Upload Images hoặc kéo thả ảnh vào khung Nguồn Ảnh phía trên.</div>';
+                return;
+            }
+            galleryGrid.innerHTML = keys.map(id => `
+                <div class="pool-thumb" data-img-id="${poolEscape(id)}" title="ID: ${poolEscape(id)} — bấm để chọn, bấm × để xóa">
+                    <img src="${imagesPool[id]}" alt="${poolEscape(id)}" loading="lazy">
+                    <span class="pool-thumb-id">${poolEscape(id)}</span>
+                    <span class="pool-thumb-del" data-del="${poolEscape(id)}" title="Xóa ảnh này">×</span>
+                </div>`).join('');
+        }
+
+        // Xóa nhiều ảnh + lưu + cập nhật mọi thứ liên quan
+        async function deletePoolImages(ids) {
+            ids.forEach(id => { delete imagesPool[id]; });
+            await saveImagesPool();
+            updatePoolUI();
+            renderGallery();
+            refreshBoardsIfIdle();
+            await checkMissingImageIds();
+        }
+
+        // Ảnh đổi → vẽ lại thẻ bài (chỉ khi ván chưa bắt đầu, không phá ván đang chơi)
+        function refreshBoardsIfIdle() {
+            if (typeof isGameStarted === 'undefined' || isGameStarted || isGameOver) return;
+            autoSave();   // chốt các ô đang gõ vào bộ nhớ
+            loadData();   // đọc lại bảng → ID mới gõ có hiệu lực ngay
+            renderBoard('team1');
+            renderBoard('team2');
+        }
+
+        // Một luồng xử lý file dùng chung cho: nút Upload, chọn file, KÉO THẢ
+        async function ingestImageFiles(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            const failed = [];
+            let added = 0;
+            const originalLabel = btnUploadImages ? btnUploadImages.innerHTML : '';
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (btnUploadImages) btnUploadImages.innerText = `Đang xử lý ${i + 1}/${files.length}...`;
+                const dotIndex = file.name.lastIndexOf('.');
+                const rawId = dotIndex !== -1 ? file.name.substring(0, dotIndex) : file.name;
+                const id = normalizePoolId(rawId);
+                if (!id) { failed.push(file.name + ' — tên file không có số thứ tự'); continue; }
+                if (!file.type.startsWith('image/')) { failed.push(file.name + ' — không phải file ảnh'); continue; }
+                try {
+                    const base64 = await compressImage(file, 400, 0.85);
+                    imagesPool[id] = base64;
+                    added++;
+                } catch (err) {
+                    console.error('Lỗi xử lý ảnh: ' + file.name, err);
+                    failed.push(file.name);
+                }
+            }
+            if (btnUploadImages) btnUploadImages.innerHTML = originalLabel;
+            autoSave();
+            await saveImagesPool();
+            updatePoolUI();
+            renderGallery();
+            refreshBoardsIfIdle();
+            await checkMissingImageIds();
+            if (failed.length) {
+                const shown = failed.slice(0, 8).join('\n• ');
+                const more = failed.length > 8 ? `\n… và ${failed.length - 8} file nữa` : '';
+                alert(`⚠️ Đã nạp ${added} ảnh.\n${failed.length} file KHÔNG đọc được:\n• ${shown}${more}\n\nNếu là ảnh HEIC (iPhone): mở ảnh → Chia sẻ → Lưu thành PNG/JPG rồi upload lại.`);
+            }
+        }
+
         if (btnUploadImages && imageUploadInput) {
             btnUploadImages.addEventListener('click', () => {
                 imageUploadInput.click();
             });
 
             imageUploadInput.addEventListener('change', async (e) => {
-                const files = e.target.files;
-                if (!files || files.length === 0) return;
-
-                btnUploadImages.innerHTML = 'Đang xử lý...';
-                
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (!file.type.startsWith('image/')) continue;
-                    
-                    let fileName = file.name;
-                    let dotIndex = fileName.lastIndexOf('.');
-                    let id = dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName;
-                    
-                    try {
-                        let base64 = await compressImage(file, 400, 0.85);
-                        imagesPool[id] = base64;
-                    } catch(err) {
-                        console.error("Lỗi xử lý ảnh: " + file.name, err);
-                    }
-                }
-                
-                const imgCount = Object.keys(imagesPool).length;
-                const poolCountEl = document.getElementById('image-pool-count');
-                if (poolCountEl) poolCountEl.innerText = imgCount + " ảnh";
-                btnUploadImages.innerHTML = '<span class="text-lg leading-none">⬆️</span> Upload Images';
-                autoSave();
-                await saveImagesPool();   // ẢNH: lưu vào kho lớn (IndexedDB)
-                updatePoolUI();
-                
+                await ingestImageFiles(e.target.files);
                 imageUploadInput.value = '';
+            });
+        }
+
+        // --- KÉO THẢ ẢNH VÀO KHUNG NGUỒN ẢNH ---
+        if (poolDropzone) {
+            ['dragenter', 'dragover'].forEach(ev => poolDropzone.addEventListener(ev, e => {
+                if (!e.dataTransfer) return;
+                e.preventDefault();
+                e.stopPropagation();
+                poolDropzone.classList.add('drop-active');
+            }));
+            ['dragleave', 'dragend'].forEach(ev => poolDropzone.addEventListener(ev, () => {
+                poolDropzone.classList.remove('drop-active');
+            }));
+            poolDropzone.addEventListener('drop', async e => {
+                e.preventDefault();
+                e.stopPropagation();
+                poolDropzone.classList.remove('drop-active');
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                    await ingestImageFiles(e.dataTransfer.files);
+                }
+            });
+        }
+        // Chặn trình duyệt mở file ảnh (mất trang) khi thả nhầm ngoài vùng cho phép
+        document.addEventListener('dragover', e => {
+            if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault();
+        });
+        document.addEventListener('drop', e => {
+            if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault();
+        });
+
+        // --- BẢNG THUMBNAIL: mở/đóng, chọn, xóa ---
+        const btnToggleGallery = document.getElementById('btn-toggle-gallery');
+        const btnCloseGallery = document.getElementById('btn-close-gallery');
+        const btnDeleteSelected = document.getElementById('btn-delete-selected');
+        const gallerySelectAll = document.getElementById('gallery-select-all');
+
+        if (btnToggleGallery && galleryPanel) {
+            btnToggleGallery.addEventListener('click', () => {
+                const opening = galleryPanel.classList.contains('hidden');
+                galleryPanel.classList.toggle('hidden');
+                if (opening) { renderGallery(); checkMissingImageIds(); }
+            });
+        }
+        if (btnCloseGallery && galleryPanel) {
+            btnCloseGallery.addEventListener('click', () => galleryPanel.classList.add('hidden'));
+        }
+        if (galleryGrid) {
+            galleryGrid.addEventListener('click', async (e) => {
+                const del = e.target.closest('.pool-thumb-del');
+                if (del) {
+                    const id = del.getAttribute('data-del');
+                    if (confirm(`Xóa ảnh ID "${id}" khỏi kho?`)) await deletePoolImages([id]);
+                    return;
+                }
+                const thumb = e.target.closest('.pool-thumb');
+                if (thumb) thumb.classList.toggle('selected');
+            });
+        }
+        if (gallerySelectAll && galleryGrid) {
+            gallerySelectAll.addEventListener('change', () => {
+                galleryGrid.querySelectorAll('.pool-thumb').forEach(t => t.classList.toggle('selected', gallerySelectAll.checked));
+            });
+        }
+        if (btnDeleteSelected && galleryGrid) {
+            btnDeleteSelected.addEventListener('click', async () => {
+                const ids = Array.from(galleryGrid.querySelectorAll('.pool-thumb.selected')).map(t => t.getAttribute('data-img-id'));
+                if (!ids.length) { alert('Hãy bấm chọn các ảnh muốn xóa trước (viền cam), rồi bấm lại nút này.'); return; }
+                if (confirm(`Xóa ${ids.length} ảnh đã chọn khỏi kho?`)) {
+                    await deletePoolImages(ids);
+                    if (gallerySelectAll) gallerySelectAll.checked = false;
+                }
             });
         }
 
@@ -1875,11 +2075,12 @@
             btnClearImages.addEventListener('click', async () => {
                 if (confirm('Bạn có chắc chắn muốn xóa toàn bộ ảnh trong Nguồn Ảnh?')) {
                     imagesPool = {};
-                    const poolCountEl = document.getElementById('image-pool-count');
-                    if (poolCountEl) poolCountEl.innerText = "0 ảnh";
                     autoSave();
                     await saveImagesPool(); // xóa ảnh cũng phải ghi vào kho lớn
                     updatePoolUI();
+                    renderGallery();
+                    refreshBoardsIfIdle();
+                    await checkMissingImageIds();
                 }
             });
         }

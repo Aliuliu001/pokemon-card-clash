@@ -166,3 +166,72 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+
+        /* --- BƯỚC 3: KHO ẢNH (thumbnail, kéo thả, ID thiếu ảnh) --- */
+        /* Vùng kéo thả: viền sáng khi kéo ảnh vào */
+        #image-pool-dropzone.drop-active {
+            outline: 3px dashed #34d399;
+            outline-offset: -6px;
+            background-color: rgba(16, 185, 129, 0.18);
+        }
+
+        /* Ô thumbnail trong bảng kho ảnh */
+        .pool-thumb {
+            position: relative;
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            padding: 4px 4px 2px;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.15s;
+        }
+        .pool-thumb:hover { border-color: #2dd4bf; transform: translateY(-2px); }
+        .pool-thumb.selected { border-color: #f59e0b; background: rgba(245, 158, 11, 0.12); }
+        .pool-thumb img {
+            width: 100%;
+            height: 52px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #0f172a;
+        }
+        .pool-thumb .pool-thumb-id {
+            display: block;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #5eead4;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .pool-thumb .pool-thumb-del {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #dc2626;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 18px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+        .pool-thumb:hover .pool-thumb-del { display: block; }
+        .pool-thumb .pool-thumb-del:hover { background: #ef4444; transform: scale(1.15); }
+
+        /* Ô nhập ID trong bảng dữ liệu thiếu ảnh → viền đỏ nhấp nháy nhẹ */
+        input.img-id-missing {
+            background-color: rgba(239, 68, 68, 0.22) !important;
+            box-shadow: inset 0 0 0 2px #ef4444;
+            animation: missingPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes missingPulse {
+            0%, 100% { box-shadow: inset 0 0 0 2px #ef4444; }
+            50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.45); }
+        }
