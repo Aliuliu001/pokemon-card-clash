@@ -99,3 +99,16 @@
   - Vừa màn hình: 1920×1080 / 1366×768 / 1280×633 → 0 tràn dọc, thẻ 176×140 / 120×62 / 112×60 ✔
   - 0 lỗi JavaScript.
 - **Lưu ý (giữ nguyên theo chọn lọc):** ghép cặp trước/sau khi lật vẫn RANDOM (2 vế độc lập) như thiết kế cũ; cửa sổ Cài đặt vẫn mở sẵn khi vào trang.
+
+
+## Giai đoạn 9: Sao lưu / Khôi phục từ file JSON (Bước 4b - 2026-10-18)
+- **Vấn đề:** Sau khi bỏ "Tải File HTML", game không còn đường cứu dữ liệu nào khi trình duyệt bị dọn, đổi máy, hay copy sang trung tâm khác.
+- **Giải pháp:** 2 nút trong khung Nguồn Ảnh:
+  - **💾 Tải bản sao lưu:** tải file `pokemon-card-sao-luu-YYYYMMDD.json` chứa **bảng bài học + cài đặt (số thẻ, chế độ hiển thị, giờ, điểm) + TOÀN BỘ kho ảnh** (Base64). Alert báo rõ: bao nhiêu dòng, bao nhiêu ảnh, kích thước file.
+  - **📂 Khôi phục từ file:** chọn file .json → kiểm tra đúng file của game (có dấu định danh app) → hỏi xác nhận (đưa số liệu trước khi thay) → khôi phục bảng + cài đặt (localStorage) + kho ảnh (IndexedDB) → **tự vẽ lại bảng, bàn chơi, kho ảnh ngay lập tức**.
+  - File sai/không đọc được → báo lỗi rõ ràng, không phá dữ liệu hiện tại.
+- **Kết quả test thật:**
+  - Seed 3 dòng (TEST_A/B/C) + 2 ảnh dummy → bấm 💾 → file tải về đúng: app marker, 3 dòng, 2 ảnh, cardsCount 12 ✔
+  - Xóa SẠCH localStorage + IndexedDB → game về data mẫu (0 ảnh, "Snail") ✔
+  - Bấm 📂 chọn file → "Khôi phục thành công": 2 ảnh trở lại, bảng TEST_A/TEST_B, cài đặt 12 thẻ ✔
+  - Reload trang → vẫn giữ nguyên (đã ghi IndexedDB thật, không phải RAM) ✔

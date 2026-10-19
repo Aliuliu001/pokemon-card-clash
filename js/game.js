@@ -2041,6 +2041,102 @@
             if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault();
         });
 
+        // --- BƯỚC 4B: SAO LƯU / KHÔI PHỤC TỪ FILE JSON ---
+        // Bản sao lưu = bảng bài học + cài đặt + TOÀN BỘ kho ảnh. Đây là đường cứu
+        // dữ liệu duy nhất khi dọn trình duyệt, đổi máy, hay sang trung tâm khác.
+        const btnBackup = document.getElementById('btn-backup');
+        const btnRestore = document.getElementById('btn-restore');
+        const restoreFileInput = document.getElementById('restore-file-input');
+
+        function backupDataKey(k) { return window.INJECTED_GAME_STATE ? k + '_' + window.INJECTED_GAME_STATE.id : k + '_main'; }
+
+        if (btnBackup) {
+            btnBackup.addEventListener('click', async () => {
+                // Đọc trực tiếp từ bảng + ô cài đặt (đúng trạng thái hiện tại em đang thấy)
+                const rows = [];
+                const row0 = document.querySelector('input[data-row="0"][data-col="0"]');
+                if (row0) {
+                    for (let i = 0; i < MAX_ROWS; i++) {
+                        rows.push({
+                            fId: (document.querySelector(`input[data-row="${i}"][data-col="0"]`) || {}).value || '',
+                            fWord: (document.querySelector(`input[data-row="${i}"][data-col="1"]`) || {}).value || '',
+                            bImgId: (document.querySelector(`input[data-row="${i}"][data-col="2"]`) || {}).value || '',
+                            bText: (document.querySelector(`input[data-row="${i}"][data-col="3"]`) || {}).value || '',
+                            bTime: (document.querySelector(`input[data-row="${i}"][data-col="4"]`) || {}).value || ''
+                        });
+                    }
+                } else {
+                    // Bảng chưa render (trường hợp hiếm) → đọc bản đã lưu
+                    try { rows.push(...(JSON.parse(SafeStore.get(backupDataKey('pokemonClashDataJSON')) || '[]'))); } catch (e) { }
+                }
+                const settings = {
+                    cardsCount: parseInt((document.getElementById('setting-cards-count') || {}).value) || CARDS_PER_TEAM,
+                    displayMode: {
+                        front: (document.getElementById('setting-front-mode') || {}).value || DISPLAY_MODE.front,
+                        back: (document.getElementById('setting-back-mode') || {}).value || DISPLAY_MODE.back
+                    },
+                    globalTime: parseInt((document.getElementById('setting-global-time') || {}).value) || GLOBAL_TIME.totalSeconds,
+                    timerEnabled: ((document.getElementById('setting-timer-enabled') || {}).value) === 'on',
+                    scoreSettings: SCORE_SETTINGS
+                };
+                const payload = {
+                    app: 'pokemon-card-clash',
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    dataJSON: rows,
+                    settings: settings,
+                    imagesPool: imagesPool || {}
+                };
+                const nImg = Object.keys(payload.imagesPool).length;
+                let sizeMB;
+                try { sizeMB = (new Blob([JSON.stringify(payload)]).size / 1048576).toFixed(1); } catch (e) { sizeMB = '?'; }
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                const d = new Date(); const pad = n => String(n).padStart(2, '0');
+                a.download = `pokemon-card-sao-luu-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.json`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+                alert(`✅ Đã tải bản sao lưu!\n\n• ${rows.filter(r => r.fId || r.fWord || r.bImgId || r.bText).length} dòng bài học\n• ${nImg} ảnh trong kho\n• Kích thước file: ${sizeMB}MB\n\nHãy giữ file này ở chỗ an toàn (USB, Google Drive...). Khi máy bị dọn hoặc sang máy khác, bấm "📂 Khôi phục từ file" và chọn file này là mọi thứ trở lại.`);
+            });
+        }
+
+        if (btnRestore && restoreFileInput) {
+            btnRestore.addEventListener('click', () => restoreFileInput.click());
+            restoreFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                restoreFileInput.value = '';
+                if (!file) return;
+                let payload;
+                try { payload = JSON.parse(await file.text()); } catch (err) {
+                    alert('❌ File này không đọc được.\n\nAnh chọn đúng file sao lưu ".json" do game tải về chưa ạ?'); return;
+                }
+                if (!payload || payload.app !== 'pokemon-card-clash' || !Array.isArray(payload.dataJSON)) {
+                    alert('❌ Đây KHÔNG phải file sao lưu của game này.\n\nAnh chọn lại file ".json" do nút "💾 Tải bản sao lưu" tải về nhé.'); return;
+                }
+                const nImg = (payload.imagesPool && typeof payload.imagesPool === 'object') ? Object.keys(payload.imagesPool).length : 0;
+                const nRow = payload.dataJSON.filter(r => r && (r.fId || r.fWord || r.bImgId || r.bText)).length;
+                if (!confirm(`📂 Khôi phục bản sao lưu ${payload.exportedAt ? payload.exportedAt.slice(0, 10) : ''}?\n\n• ${nRow} dòng bài học\n• ${nImg} ảnh kho\n\nMọi thứ HIỆN TẠI sẽ bị thay bằng nội dung trong file.`)) return;
+                // 1) Bảng + cài đặt
+                SafeStore.set(backupDataKey('pokemonClashDataJSON'), JSON.stringify(payload.dataJSON));
+                if (payload.settings) SafeStore.set(backupDataKey('pokemonClashSettings'), JSON.stringify(payload.settings));
+                // 2) Kho ảnh → IndexedDB (trượt thì về localStorage)
+                imagesPool = (payload.imagesPool && typeof payload.imagesPool === 'object') ? payload.imagesPool : {};
+                const saved = await saveImagesPool();
+                if (!saved) { alert('⚠️ Khôi phục bảng xong nhưng kho ảnh KHÔNG lưu được (bộ nhớ trình duyệt đầy).'); return; }
+                // 3) Vẽ lại toàn bộ theo bản vừa khôi phục
+                if (payload.settings) {
+                    if (payload.settings.cardsCount) CARDS_PER_TEAM = payload.settings.cardsCount;
+                    if (payload.settings.displayMode) { DISPLAY_MODE.front = payload.settings.displayMode.front; DISPLAY_MODE.back = payload.settings.displayMode.back; }
+                }
+                loadData(); // tự renderGrid + renderBoard từ bản đã lưu
+                renderBoard('team1'); renderBoard('team2');
+                renderGallery(); updatePoolUI();
+                await checkMissingImageIds();
+                alert(`✅ Khôi phục thành công!\n\n${nRow} dòng bài học + ${nImg} ảnh đã trở lại.\nBảng và bàn chơi đã được vẽ lại theo bản sao lưu.`);
+            });
+        }
+
         // --- BẢNG THUMBNAIL: mở/đóng, chọn, xóa ---
         const btnToggleGallery = document.getElementById('btn-toggle-gallery');
         const btnCloseGallery = document.getElementById('btn-close-gallery');
