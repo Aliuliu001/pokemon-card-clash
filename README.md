@@ -8,7 +8,12 @@ Một dự án minigame giáo dục dạng lật thẻ bài được thiết k�
 - **Giao diện thân thiện, hiện đại:** Sử dụng TailwindCSS cho giao diện bắt mắt, hiệu ứng 3D lật thẻ bài mượt mà.
 - **Tính năng Nguồn Ảnh (Image Pool):** Tải ảnh `.png`, `.jpg` trực tiếp từ máy tính lên game. Hệ thống sẽ tự động nén ảnh dưới định dạng siêu nhẹ (WebP/PNG) để đảm bảo game không bị giật lag và không bị lỗi bộ nhớ trình duyệt. Hỗ trợ hoàn hảo cho ảnh trong suốt (transparent background).
 - **Kho ảnh trực quan:** Kéo thả ảnh vào game, xem toàn bộ ảnh dưới dạng thumbnail, xóa từng ảnh hoặc nhiều ảnh một lúc. Ô ID nào thiếu ảnh sẽ tự tô đỏ trước khi lên lớp.
+- **Ảnh theo Chủ đề (Album):** Tạo nhiều album (Animals, Food, Halloween...), chọn album trước khi upload, khi chơi chỉ cần mở đúng album. Nút 🧹 tự dọn ảnh chưa dùng.
+- **Sao lưu / Khôi phục:** Tải 1 file JSON chứa bảng bài học + cài đặt + toàn bộ album ảnh. Máy bị dọn hay sang máy khác → bấm Khôi phục là mọi thứ trở lại.
 - **Tùy chỉnh đa dạng:** Cho phép thay đổi số lượng thẻ bài, thời gian đếm ngược, và cách thức hiển thị (mặt trước/mặt sau).
+
+## 📚 Tài liệu phát triển
+- **[HUONG_DAN_AI.md](HUONG_DAN_AI.md)** — Cẩm nang cho AI (Hermes/Antigravity/Codex) và nhà phát triển: kiến trúc, workflow, các hàm quan trọng. ĐỌC TRƯỚC KHI SỬA CODE.
 
 ## 🚀 Hướng Dẫn Sử Dụng (Dành cho Giáo viên)
 

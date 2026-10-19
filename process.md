@@ -112,3 +112,34 @@
   - Xóa SẠCH localStorage + IndexedDB → game về data mẫu (0 ảnh, "Snail") ✔
   - Bấm 📂 chọn file → "Khôi phục thành công": 2 ảnh trở lại, bảng TEST_A/TEST_B, cài đặt 12 thẻ ✔
   - Reload trang → vẫn giữ nguyên (đã ghi IndexedDB thật, không phải RAM) ✔
+
+
+## Giai đoạn 10: Album theo Chủ đề + 🧹 Dọn ảnh chưa dùng (Bước 5 - 2026-10-18)
+- **Yêu cầu của thầy:** lưu ảnh theo chủ đề (Animals, Food, Halloween...), khi
+  chơi chỉ cần bấm mở chủ đề đúng; và chống "rác" khi bạn giáo viên khác upload
+  ảnh dồn dập không để ý.
+- **Giải pháp Album (không phá code cũ):**
+  - `albums = {tên: {id: dataURL}}` + `currentAlbumName`; `imagesPool` LUÔN là
+    tham chiếu vào album đang mở → toàn bộ code cũ (thẻ bài, upload, kho ảnh,
+    cảnh báo ID thiếu) chạy nguyên vẹn.
+  - Dạng lưu IndexedDB mới `{albums, current}`; dữ liệu cũ (flat pool) tự
+    dời nhà vào album "Chưa phân loại" qua `normalizeAlbums()`.
+  - UI: dropdown 📖 Chủ đề (hiện số ảnh), ➕ Tạo mới, ✏️ Đổi tên, 🗑️ Xóa
+    (báo số ảnh sẽ mất, giữ tối thiểu 1 chủ đề).
+  - Upload vào album đang mở; chuyển album → bàn chơi + kho ảnh đổi theo ngay.
+- **Giải pháp 🧹 Dọn ảnh chưa dùng:** đếm ảnh trong album mà bảng bài học
+  không tham chiếu (cột ID Trước + ID Sau) → confirm nêu rõ danh sách ID sẽ
+  xóa → xóa đúng那些, GIỮ ảnh đang dùng.
+- **Sao lưu v2:** file JSON giờ chứa TOÀN BỘ album (`albums` + `currentAlbum`),
+  đọc được cả file v1 cũ (`imagesPool` phẳng) khi khôi phục.
+- **Kết quả test thật:**
+  - Flat pool cũ (2 ảnh) → mở trang → album "Chưa phân loại (2 ảnh)" ✔
+  - Tạo "Animals" → upload 101/102 vào đó; "Chưa phân loại" giữ 5/6; chuyển
+    qua lại đúng ảnh mỗi album; reload giữ nguyên cả 2 album ✔
+  - 🧹 Dọn: bảng dùng ID 5 → xác nhận "Xóa 1 ảnh chưa dùng: 6" → còn đúng 5 ✔
+  - Backup v2: "2 chủ đề, tổng 3 ảnh"; xóa sạch → Khôi phục → cả 2 album + bảng
+    trở lại ✔; file v1 cũ vẫn khôi phục được ✔
+  - 0 lỗi JavaScript.
+- **Tài liệu repo:** thêm `HUONG_DAN_AI.md` — cẩm nang cho AI (Hermes/Antigravity/
+  Codex) và dev: kiến trúc, các hàm public, workflow sửa code, bẫy đã gặp.
+  (File `AGENTS.md` bị chặn bởi cơ chế bảo vệ của tool — dùng tên tiếng Việt.)

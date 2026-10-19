@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body class="p-1 md:p-2 pb-14 md:pb-16 flex flex-col items-center relative overflow-x-hidden">
 
@@ -190,6 +190,15 @@
                 <div class="relative z-10">
                     <h3 class="text-emerald-400 font-bold text-sm tracking-wider mb-1 uppercase">Nguồn Ảnh</h3>
                     <p class="text-slate-300 text-xs">Kéo thả hoặc tải ảnh lên. Tên file ảnh (VD: "1") dùng để điền vào bảng.</p>
+                </div>
+                <!-- ALBUM THEO CHỦ ĐỀ (Bước 5): chọn chủ đề trước khi upload, khi chơi chỉ cần mở đúng chủ đề -->
+                <div class="flex items-center gap-1.5 relative z-10 w-full md:w-auto flex-wrap mt-1">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wide">📖 Chủ đề:</span>
+                    <select id="album-select" class="bg-slate-800 border border-slate-600 text-white text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500 max-w-[180px]"></select>
+                    <button id="btn-album-new" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95 whitespace-nowrap" title="Tạo album chủ đề mới (VD: Animals, Food, Halloween...)">➕ Tạo mới</button>
+                    <button id="btn-album-rename" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95" title="Đổi tên chủ đề đang mở">✏️</button>
+                    <button id="btn-album-delete" class="bg-rose-700 hover:bg-rose-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95" title="Xóa chủ đề đang mở (kèm ảnh trong đó)">🗑️</button>
+                    <button id="btn-clean-unused" class="bg-amber-700 hover:bg-amber-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95 whitespace-nowrap" title="Xóa ảnh trong album mà bảng bài học chưa dùng tới">🧹 Dọn ảnh chưa dùng</button>
                 </div>
                 <div class="flex items-center gap-2 relative z-10 w-full md:w-auto flex-wrap">
                     <input type="file" id="image-upload-input" multiple accept="image/*" class="hidden">
@@ -392,8 +401,8 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=5"></script>
-    <script src="js/game.js?v=5"></script>
+    <script src="js/config.js?v=6"></script>
+    <script src="js/game.js?v=6"></script>
 
 </body>
 </html>

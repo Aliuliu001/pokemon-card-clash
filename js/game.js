@@ -84,48 +84,76 @@
         }
 
         // Nạp kho ảnh lúc mở trang: IndexedDB → chỗ cũ (localStorage, tự dời nhà) → file HTML nhúng
+        // Dạng lưu MỚI (Bước 5): { albums: {tên: {id: dataURL}}, current: tên }
+        // Dạng cũ (flat pool {id: dataURL}) → tự dời nhà thành album 'Chưa phân loại'.
+        function normalizeAlbums(raw) {
+            if (raw && typeof raw === 'object' && raw.albums && typeof raw.albums === 'object') {
+                const al = {};
+                for (const name in raw.albums) {
+                    if (raw.albums[name] && typeof raw.albums[name] === 'object') al[name] = raw.albums[name];
+                }
+                if (!Object.keys(al).length) al['Chưa phân loại'] = {};
+                const cur = (raw.current && al[raw.current]) ? raw.current : Object.keys(al)[0];
+                return { albums: al, current: cur };
+            }
+            if (raw && typeof raw === 'object') {
+                // Dạng cũ: flat pool {id: dataURL} →1 album
+                return { albums: { 'Chưa phân loại': raw }, current: 'Chưa phân loại' };
+            }
+            return { albums: { 'Chưa phân loại': {} }, current: 'Chưa phân loại' };
+        }
+
         async function loadImagesPool() {
             const key = imagesStorageKey();
-            let idbPool = null;
-            try { idbPool = await ImageDB.get(key); } catch (e) { console.warn('IndexedDB đọc lỗi:', e); }
-            idbPool = (idbPool && typeof idbPool === 'object') ? idbPool : null;
+            let idbRaw = null;
+            try { idbRaw = await ImageDB.get(key); } catch (e) { console.warn('IndexedDB đọc lỗi:', e); }
+            idbRaw = (idbRaw && typeof idbRaw === 'object') ? idbRaw : null;
 
-            let lsPool = null;
+            let lsRaw = null;
             const ls = SafeStore.get(key);
             if (ls) {
-                try { lsPool = JSON.parse(ls); } catch (e) { lsPool = null; }
-                if (!lsPool || typeof lsPool !== 'object') lsPool = null;
+                try { lsRaw = JSON.parse(ls); } catch (e) { lsRaw = null; }
+                if (!lsRaw || typeof lsRaw !== 'object') lsRaw = null;
             }
 
-            if (idbPool && lsPool) {
-                // Cả 2 nơi cùng có (trường hợp hiếm: tab cũ song song) → GỘP, không bỏ bên nào
-                imagesPool = Object.assign({}, idbPool, lsPool);
-                try { await ImageDB.set(key, imagesPool); } catch (e) { }
+            let raw = null;
+            if (idbRaw && lsRaw) {
+                // Cả 2 nơi cùng có → GỘP theo album, không bỏ bên nào
+                const a = normalizeAlbums(idbRaw), b = normalizeAlbums(lsRaw);
+                for (const name in b.albums) {
+                    a.albums[name] = Object.assign({}, a.albums[name] || {}, b.albums[name]);
+                }
+                raw = a;
+                try { await ImageDB.set(key, { albums: raw.albums, current: raw.current }); } catch (e) { }
                 SafeStore.remove(key);
-            } else if (idbPool) {
-                imagesPool = idbPool;
+            } else if (idbRaw) {
+                raw = idbRaw;
                 SafeStore.remove(key); // dọn bản cũ còn sót trong localStorage
-            } else if (lsPool) {
-                imagesPool = lsPool;
-                try { await ImageDB.set(key, lsPool); SafeStore.remove(key); } catch (e) { /* giữ bản cũ nếu không dời được */ }
+            } else if (lsRaw) {
+                raw = lsRaw;
+                try { await ImageDB.set(key, lsRaw); SafeStore.remove(key); } catch (e) { /* giữ bản cũ nếu không dời được */ }
             } else if (window.INJECTED_GAME_STATE && window.INJECTED_GAME_STATE.imagesPool) {
-                imagesPool = window.INJECTED_GAME_STATE.imagesPool;
-            } else {
-                imagesPool = {};
+                raw = window.INJECTED_GAME_STATE.imagesPool;
             }
+
+            const n = normalizeAlbums(raw);
+            albums = n.albums;
+            currentAlbumName = n.current;
+            imagesPool = albums[currentAlbumName];
         }
 
         // Lưu kho ảnh: ưu tiên IndexedDB, trượt thì về localStorage, hết chỗ thật → LA RÕ
         async function saveImagesPool() {
             const key = imagesStorageKey();
+            const wrapper = { albums: albums, current: currentAlbumName };
             try {
-                await ImageDB.set(key, imagesPool);
+                await ImageDB.set(key, wrapper);
                 SafeStore.remove(key); // đã có bản lớn → dọn bản 5MB cũ
                 return true;
             } catch (e) {
                 console.warn('IndexedDB ghi lỗi, thử localStorage:', e);
             }
-            if (SafeStore.set(key, JSON.stringify(imagesPool))) return true;
+            if (SafeStore.set(key, JSON.stringify(wrapper))) return true;
             alert('⚠️ BỘ NHỚ TRÌNH DUYỆT ĐÃ HẾT!\n\nKho ảnh KHÔNG thể lưu thêm được nữa.\n\nCách xử lý: bấm Clear để xóa bớt ảnh trong Nguồn Ảnh (ưu tiên xóa ảnh không dùng tới) rồi upload lại.');
             return false;
         }
@@ -1837,6 +1865,7 @@
         (async () => {
             try { await loadImagesPool(); } catch (e) { console.error('Nạp kho ảnh lỗi:', e); }
             initGame();
+            renderAlbumSelect(); // vẽ danh sách chủ đề sau khi đã nạp album (Bước 5)
         })();
         
         btnSkip.addEventListener('click', (e) => { e.preventDefault(); skipHandler(true); });
@@ -2081,13 +2110,16 @@
                 };
                 const payload = {
                     app: 'pokemon-card-clash',
-                    version: 1,
+                    version: 2,
                     exportedAt: new Date().toISOString(),
                     dataJSON: rows,
                     settings: settings,
-                    imagesPool: imagesPool || {}
+                    // Bước 5: sao lưu TOÀN BỘ album (nhiều chủ đề), không chỉ album đang mở
+                    albums: albums,
+                    currentAlbum: currentAlbumName
                 };
-                const nImg = Object.keys(payload.imagesPool).length;
+                const nAlbums = Object.keys(albums).length;
+                const nImg = Object.values(albums).reduce((s, a) => s + Object.keys(a || {}).length, 0);
                 let sizeMB;
                 try { sizeMB = (new Blob([JSON.stringify(payload)]).size / 1048576).toFixed(1); } catch (e) { sizeMB = '?'; }
                 const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
@@ -2097,7 +2129,7 @@
                 a.download = `pokemon-card-sao-luu-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.json`;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-                alert(`✅ Đã tải bản sao lưu!\n\n• ${rows.filter(r => r.fId || r.fWord || r.bImgId || r.bText).length} dòng bài học\n• ${nImg} ảnh trong kho\n• Kích thước file: ${sizeMB}MB\n\nHãy giữ file này ở chỗ an toàn (USB, Google Drive...). Khi máy bị dọn hoặc sang máy khác, bấm "📂 Khôi phục từ file" và chọn file này là mọi thứ trở lại.`);
+                alert(`✅ Đã tải bản sao lưu!\n\n• ${rows.filter(r => r.fId || r.fWord || r.bImgId || r.bText).length} dòng bài học\n• ${nAlbums} chủ đề, tổng ${nImg} ảnh\n• Kích thước file: ${sizeMB}MB\n\nHãy giữ file này ở chỗ an toàn (USB, Google Drive...). Khi máy bị dọn hoặc sang máy khác, bấm "📂 Khôi phục từ file" và chọn file này là mọi thứ trở lại.`);
             });
         }
 
@@ -2114,14 +2146,18 @@
                 if (!payload || payload.app !== 'pokemon-card-clash' || !Array.isArray(payload.dataJSON)) {
                     alert('❌ Đây KHÔNG phải file sao lưu của game này.\n\nAnh chọn lại file ".json" do nút "💾 Tải bản sao lưu" tải về nhé.'); return;
                 }
-                const nImg = (payload.imagesPool && typeof payload.imagesPool === 'object') ? Object.keys(payload.imagesPool).length : 0;
+                // Đọc album: bản mới (v2) có payload.albums; bản cũ (v1) có payload.imagesPool (1 kho phẳng)
+                const restoredAlbums = normalizeAlbums(payload.albums ? { albums: payload.albums, current: payload.currentAlbum } : payload.imagesPool);
+                const nImg = Object.values(restoredAlbums.albums).reduce((s, a) => s + Object.keys(a || {}).length, 0);
                 const nRow = payload.dataJSON.filter(r => r && (r.fId || r.fWord || r.bImgId || r.bText)).length;
-                if (!confirm(`📂 Khôi phục bản sao lưu ${payload.exportedAt ? payload.exportedAt.slice(0, 10) : ''}?\n\n• ${nRow} dòng bài học\n• ${nImg} ảnh kho\n\nMọi thứ HIỆN TẠI sẽ bị thay bằng nội dung trong file.`)) return;
+                if (!confirm(`📂 Khôi phục bản sao lưu ${payload.exportedAt ? payload.exportedAt.slice(0, 10) : ''}?\n\n• ${nRow} dòng bài học\n• ${Object.keys(restoredAlbums.albums).length} chủ đề, ${nImg} ảnh\n\nMọi thứ HIỆN TẠI sẽ bị thay bằng nội dung trong file.`)) return;
                 // 1) Bảng + cài đặt
                 SafeStore.set(backupDataKey('pokemonClashDataJSON'), JSON.stringify(payload.dataJSON));
                 if (payload.settings) SafeStore.set(backupDataKey('pokemonClashSettings'), JSON.stringify(payload.settings));
-                // 2) Kho ảnh → IndexedDB (trượt thì về localStorage)
-                imagesPool = (payload.imagesPool && typeof payload.imagesPool === 'object') ? payload.imagesPool : {};
+                // 2) Album + kho ảnh → IndexedDB (trượt thì về localStorage)
+                albums = restoredAlbums.albums;
+                currentAlbumName = restoredAlbums.current;
+                imagesPool = albums[currentAlbumName];
                 const saved = await saveImagesPool();
                 if (!saved) { alert('⚠️ Khôi phục bảng xong nhưng kho ảnh KHÔNG lưu được (bộ nhớ trình duyệt đầy).'); return; }
                 // 3) Vẽ lại toàn bộ theo bản vừa khôi phục
@@ -2131,13 +2167,117 @@
                 }
                 loadData(); // tự renderGrid + renderBoard từ bản đã lưu
                 renderBoard('team1'); renderBoard('team2');
-                renderGallery(); updatePoolUI();
+                renderAlbumSelect(); renderGallery(); updatePoolUI();
                 await checkMissingImageIds();
-                alert(`✅ Khôi phục thành công!\n\n${nRow} dòng bài học + ${nImg} ảnh đã trở lại.\nBảng và bàn chơi đã được vẽ lại theo bản sao lưu.`);
+                alert(`✅ Khôi phục thành công!\n\n${nRow} dòng bài học + ${Object.keys(restoredAlbums.albums).length} chủ đề (${nImg} ảnh) đã trở lại.\nBảng và bàn chơi đã được vẽ lại theo bản sao lưu.`);
             });
         }
 
-        // --- BẢNG THUMBNAIL: mở/đóng, chọn, xóa ---
+        // --- ALBUM THEO CHỦ ĐỀ (Bước 5) ---
+        // imagesPool LUÔN trỏ vào albums[currentAlbumName] → mọi code cũ
+        // (upload, renderGallery, checkMissingImageIds, thẻ bài...) chạy nguyên,
+        // chỉ cần gọi renderAlbumSelect() sau khi danh sách album đổi.
+        const albumSelect = document.getElementById('album-select');
+        const btnAlbumNew = document.getElementById('btn-album-new');
+        const btnAlbumRename = document.getElementById('btn-album-rename');
+        const btnAlbumDelete = document.getElementById('btn-album-delete');
+        const btnCleanUnused = document.getElementById('btn-clean-unused');
+
+        function renderAlbumSelect() {
+            if (!albumSelect) return;
+            albumSelect.innerHTML = Object.keys(albums).map(name => {
+                const n = Object.keys(albums[name] || {}).length;
+                return `<option value="${poolEscape(name)}" ${name === currentAlbumName ? 'selected' : ''}>${poolEscape(name)} (${n} ảnh)</option>`;
+            }).join('');
+        }
+
+        async function switchAlbum(name) {
+            if (!albums[name] || name === currentAlbumName) return;
+            currentAlbumName = name;
+            imagesPool = albums[name]; // đổi tham chiếu — mọi code cũ tự thấy album mới
+            await saveImagesPool();
+            renderAlbumSelect();
+            updatePoolUI();
+            renderGallery();
+            refreshBoardsIfIdle();
+            await checkMissingImageIds();
+        }
+
+        function albumNameTaken(name, exceptName) {
+            return Object.keys(albums).some(n => n !== exceptName && n.toLowerCase() === name.toLowerCase());
+        }
+
+        if (albumSelect) {
+            albumSelect.addEventListener('change', () => switchAlbum(albumSelect.value));
+        }
+        if (btnAlbumNew) {
+            btnAlbumNew.addEventListener('click', async () => {
+                const name = (prompt('Tên chủ đề mới (VD: Animals, Food, Halloween...):') || '').trim();
+                if (!name) return;
+                if (albumNameTaken(name)) { alert(`⚠️ Đã có chủ đề "${name}" rồi.`); return; }
+                albums[name] = {};
+                currentAlbumName = name;
+                imagesPool = albums[name];
+                await saveImagesPool();
+                renderAlbumSelect();
+                updatePoolUI();
+                renderGallery();
+                refreshBoardsIfIdle();
+                await checkMissingImageIds();
+            });
+        }
+        if (btnAlbumRename) {
+            btnAlbumRename.addEventListener('click', async () => {
+                const name = (prompt('Tên mới cho chủ đề:', currentAlbumName) || '').trim();
+                if (!name || name === currentAlbumName) return;
+                if (albumNameTaken(name, currentAlbumName)) { alert(`⚠️ Đã có chủ đề "${name}" rồi.`); return; }
+                // Đổi tên tại chỗ: giữ nguyên object ảnh, chỉ đổi khóa
+                albums[name] = albums[currentAlbumName];
+                delete albums[currentAlbumName];
+                currentAlbumName = name;
+                imagesPool = albums[name];
+                await saveImagesPool();
+                renderAlbumSelect();
+            });
+        }
+        if (btnAlbumDelete) {
+            btnAlbumDelete.addEventListener('click', async () => {
+                if (Object.keys(albums).length <= 1) { alert('⚠️ Phải giữ lại ít nhất 1 chủ đề.'); return; }
+                const n = Object.keys(imagesPool).length;
+                if (!confirm(`Xóa chủ đề "${currentAlbumName}"${n ? ` kèm ${n} ảnh bên trong` : ''}?\n\nHành động này không hoàn tác được (trừ khi đã tải bản sao lưu trước đó).`)) return;
+                delete albums[currentAlbumName];
+                currentAlbumName = Object.keys(albums)[0];
+                imagesPool = albums[currentAlbumName];
+                await saveImagesPool();
+                renderAlbumSelect();
+                updatePoolUI();
+                renderGallery();
+                refreshBoardsIfIdle();
+                await checkMissingImageIds();
+            });
+        }
+
+        // 🧹 DỌN ẢNH CHƯA DÙNG: đếm ảnh trong album mà bảng bài học không tham chiếu tới
+        function collectUsedImageIds() {
+            const used = new Set();
+            document.querySelectorAll('input[data-col="0"], input[data-col="2"]').forEach(inp => {
+                (inp.value || '').split(',').forEach(id => { const t = id.trim(); if (t) used.add(t); });
+            });
+            return used;
+        }
+        if (btnCleanUnused) {
+            btnCleanUnused.addEventListener('click', async () => {
+                const used = collectUsedImageIds();
+                const unused = Object.keys(imagesPool).filter(id => !used.has(id));
+                if (!unused.length) { alert('✅ Tốt quá! Toàn bộ ảnh trong album này đều đang được bảng bài học dùng.'); return; }
+                const shown = unused.slice(0, 15).join(', ');
+                const more = unused.length > 15 ? `, … (${unused.length - 15} ảnh nữa)` : '';
+                if (!confirm(`🧹 Xóa ${unused.length} ảnh CHƯA DÙNG trong album "${currentAlbumName}"?\n\nẢnh được dùng (có ID trong bảng) sẽ được GIỮ NGUYÊN.\n\nẢnh sẽ xóa: ${shown}${more}`)) return;
+                await deletePoolImages(unused);
+                alert(`✅ Đã dọn ${unused.length} ảnh chưa dùng. Kho nhẹ hơn rồi!`);
+            });
+        }
+
         const btnToggleGallery = document.getElementById('btn-toggle-gallery');
         const btnCloseGallery = document.getElementById('btn-close-gallery');
         const btnDeleteSelected = document.getElementById('btn-delete-selected');
@@ -2183,8 +2323,10 @@
 
         if (btnClearImages) {
             btnClearImages.addEventListener('click', async () => {
-                if (confirm('Bạn có chắc chắn muốn xóa toàn bộ ảnh trong Nguồn Ảnh?')) {
-                    imagesPool = {};
+                const albumLabel = albums[currentAlbumName] ? `trong album "${currentAlbumName}"` : '';
+                if (confirm(`Bạn có chắc chắn muốn xóa toàn bộ ảnh ${albumLabel}?`)) {
+                    // Xóa TẠI CHỖI (giữ nguyên tham chiếu album), không gán imagesPool = {}
+                    Object.keys(imagesPool).forEach(k => { delete imagesPool[k]; });
                     autoSave();
                     await saveImagesPool(); // xóa ảnh cũng phải ghi vào kho lớn
                     updatePoolUI();

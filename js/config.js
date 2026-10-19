@@ -62,4 +62,9 @@ const MAX_ROWS = 100;
         ];
 
 
-let imagesPool = {}; // Lưu trữ ảnh dạng Base64
+let imagesPool = {}; // Lưu trữ ảnh dạng Base64 — TRỎ VÀO album đang mở (xem albums bên dưới)
+// ALBUM THEO CHỦ ĐỀ (Bước 5): nhiều chủ đề, mỗi chủ đề 1 ngăn ảnh.
+// imagesPool LUÔN là tham chiếu tới albums[currentAlbumName] — mọi code cũ
+// dùng imagesPool[id] tự động chạy đúng theo album đang mở, không cần sửa.
+let albums = { 'Chưa phân loại': {} };
+let currentAlbumName = 'Chưa phân loại';
