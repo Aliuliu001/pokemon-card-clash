@@ -169,3 +169,23 @@
   - Bảng có đủ 2 mặt → lật ra text bình thường, KHÔNG hiện galaxy ✔
   - Layout 1280×633: tiêu đề + card galaxy + nút điểm + SKIP trọn vẹn, không cắt ✔
   - 0 lỗi JavaScript.
+
+## Giai đoạn 12: Sửa lỗi layout thẻ bài (ảnh hiển thị trên card bị nhỏ) (2026-10-21)
+- **Vấn đề phát hiện:**
+  - `style.css` ép `.card` có `max-height: max(60px, calc((100vh - 520px) / var(--card-rows, 4))) !important` khiến thẻ bài trên laptop/màn chiếu bị bẹp dí xuống còn 60px - 80px (tỷ lệ ngang thay vì 4:5).
+  - Vòng tròn số (badge) quá to (48px) chiếm trọn 80% chiều cao thẻ.
+  - Chế độ hiển thị `DISPLAY_MODE.front === 'both'` luôn render 2 container (phần ảnh trên + pill trắng chữ dưới). Khi giáo viên dùng bài ghép cặp chỉ có ảnh (hoặc chỉ có chữ), pill trắng rỗng vẫn chiếm chỗ đẩy ảnh thu nhỏ lại thành thumbnail tí hon, còn thẻ chữ thì chữ bị nhét xuống góc dưới.
+  - Header avatar đội quá lớn (`w-32 h-32` = 128px) làm tốn nhiều không gian màn hình.
+- **Cách khắc phục:**
+  - **CSS:** Tinh chỉnh `max-height: max(105px, calc((100vh - 260px) / var(--card-rows, 4)))` cho thẻ bài; thu gọn container avatar 2 đội thành `.team-avatar-box` (56px - 68px); giảm padding chân trang `pb-4 md:pb-6` để toàn bộ bàn chơi vừa khít màn hình 1280×633 không bị thanh cuộn.
+  - **Badge số:** Tinh chỉnh kích thước huy hiệu số cân đối gọn gàng (`w-6` đến `w-9`, font `text-xs` đến `md:text-base`).
+  - **Logic render mặt trước thẻ bài (`game.js`):**
+    - Khi thẻ chỉ có ảnh: ảnh phóng to toàn diện tích thẻ (`absolute inset-0 flex items-center justify-center p-1.5 pt-4`), dùng `w-full h-full object-contain` to rõ sắc nét, không còn viền trắng rỗng ở dưới.
+    - Khi thẻ chỉ có chữ: chữ tự động căn giữa toàn bộ thẻ với phông to đậm, bóng đổ rõ nét.
+    - Khi thẻ có cả ảnh lẫn chữ: ảnh ở trên, chữ ở pill trắng bên dưới.
+- **Kết quả test:**
+  - Thẻ bài to rõ, đạt tỷ lệ đẹp (~140px x 124px trên 1280×633).
+  - Hình ảnh phóng to chiếm trọn thẻ, dễ nhìn từ xa trong lớp học.
+  - Thẻ chữ to rõ, căn giữa chuẩn xác.
+  - Màn hình 1280×633 vừa khít, không còn thanh cuộn dọc (0 scrollbar).
+  - Syntax check: 0 lỗi. Cache-buster bump lên `?v=10`.

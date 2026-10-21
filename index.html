@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=10">
 </head>
-<body class="p-1 md:p-2 pb-14 md:pb-16 flex flex-col items-center relative overflow-x-hidden">
+<body class="p-1 md:p-2 pb-4 md:pb-6 flex flex-col items-center relative overflow-x-hidden">
 
     <!-- Header (Đã ẩn Tiêu đề & Cân chỉnh Timer) -->
     <div class="w-full flex flex-col items-center justify-center z-10 pointer-events-none">
@@ -36,7 +36,7 @@
             <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
                     <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
-                        <div class="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
+                        <div class="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 team-avatar-box flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
                             <!-- KHIÊN BẢO VỆ -->
                             <div id="team1-shield-container" class="absolute inset-[-2px] z-20 pointer-events-none opacity-0 scale-150 transition-all duration-500 flex items-center justify-center">
                                 <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
@@ -48,7 +48,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="relative inline-block w-full">
-                                <select id="team1-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full truncate theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
+                                <select id="team1-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
                                 <span class="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-xs md:text-base theme-text">▼</span>
                             </div>
                             <div class="text-[9px] md:text-xs mt-0.5 text-slate-300 font-bold">Flipped: <span id="team1-flipped">0</span>/<span class="team-cards-total">0</span></div>
@@ -68,7 +68,7 @@
             <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
                     <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
-                        <div class="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
+                        <div class="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 team-avatar-box flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
                             <!-- KHIÊN BẢO VỆ -->
                             <div id="team2-shield-container" class="absolute inset-[-2px] z-20 pointer-events-none opacity-0 scale-150 transition-all duration-500 flex items-center justify-center">
                                 <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="relative inline-block w-full">
-                                <select id="team2-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full truncate theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
+                                <select id="team2-select" class="text-sm sm:text-base md:text-xl font-black tarot-font tracking-wider bg-transparent border-b-2 border-dashed outline-none cursor-pointer appearance-none pr-5 w-full theme-text theme-select-border transition-colors duration-500 drop-shadow-sm"><option value="25" class="bg-slate-800 text-white">TEAM PIKACHU</option><option value="6" class="bg-slate-800 text-white">TEAM CHARIZARD</option><option value="150" class="bg-slate-800 text-white">TEAM MEWTWO</option><option value="10104" class="bg-slate-800 text-white">TEAM ALOLAN NINETALES</option><option value="492" class="bg-slate-800 text-white">TEAM SHAYMIN</option><option value="134" class="bg-slate-800 text-white">TEAM VAPOREON</option><option value="94" class="bg-slate-800 text-white">TEAM GENGAR</option><option value="417" class="bg-slate-800 text-white">TEAM PACHIRISU</option><option value="494" class="bg-slate-800 text-white">TEAM VICTINI</option><option value="282" class="bg-slate-800 text-white">TEAM GARDEVOIR</option><option value="697" class="bg-slate-800 text-white">TEAM TYRANTRUM</option></select>
                                 <span class="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-xs md:text-base theme-text">▼</span>
                             </div>
                             <div class="text-[9px] md:text-xs mt-0.5 text-slate-300 font-bold">Flipped: <span id="team2-flipped">0</span>/<span class="team-cards-total">0</span></div>
@@ -401,8 +401,8 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=8"></script>
-    <script src="js/game.js?v=8"></script>
+    <script src="js/config.js?v=10"></script>
+    <script src="js/game.js?v=10"></script>
 
 </body>
 </html>

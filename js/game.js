@@ -450,8 +450,8 @@
                 let src = imagesPool[id] ? imagesPool[id] : `./Front-side/${id}.png`;
                 let onErrorAttr = imagesPool[id] ? `onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"` : `onerror="if(this.src.endsWith('.png')){this.src='./Front-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Front-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}"`;
                 return `
-                <div class="relative w-full h-full flex items-center justify-center">
-                    <img src="${src}" class="w-full h-full object-contain drop-shadow-md p-0.5 z-10" alt="img" 
+                <div class="relative w-full h-full flex items-center justify-center p-1">
+                    <img src="${src}" class="w-full h-full object-contain drop-shadow-md z-10" alt="img" 
                          ${onErrorAttr}>
                     <div class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 text-slate-400 text-[9px] text-center font-bold z-0 bg-slate-50 rounded"><span>Missing<br>${id}</span></div>
                 </div>
@@ -1058,29 +1058,37 @@
                 const cover = document.createElement('div'); cover.className = `absolute inset-0 backface-hidden rounded-lg card-cover theme-card bg-white`;
                 
                 let frontContentHTML = '';
-                if (DISPLAY_MODE.front === 'image') {
+                const hasImg = !!(frontItem.idStr && frontItem.idStr.trim());
+                const hasWord = !!(frontItem.word && frontItem.word.trim());
+
+                if (DISPLAY_MODE.front === 'image' || (hasImg && !hasWord)) {
+                    // Ưu tiên hiển thị ảnh to toàn diện tích card khi chỉ có ảnh
                     frontContentHTML = `
-                        <div class="absolute inset-0 flex items-center justify-center p-2 pt-5 sm:pt-6 md:pt-8 lg:pt-10 z-10">
+                        <div class="absolute inset-0 flex items-center justify-center p-1.5 sm:p-2 pt-4 sm:pt-5 md:pt-6 z-10">
                             ${renderFrontImages(frontItem.idStr)}
                         </div>
                     `;
-                } else if (DISPLAY_MODE.front === 'text') {
+                } else if (DISPLAY_MODE.front === 'text' || (!hasImg && hasWord)) {
+                    // Ưu tiên hiển thị chữ to cân đối giữa card khi chỉ có chữ
                     frontContentHTML = `
-                        <div class="absolute inset-0 flex items-center justify-center p-2 pt-5 sm:pt-6 md:pt-8 lg:pt-10 z-10 overflow-hidden" style="container-type: inline-size;">
+                        <div class="absolute inset-0 flex items-center justify-center p-2 pt-4 sm:pt-5 md:pt-6 z-10 overflow-hidden" style="container-type: inline-size;">
                             ${getResponsiveText(frontItem.word, false)}
                         </div>
                     `;
-                } else {
+                } else if (hasImg && hasWord) {
+                    // Khi có cả ảnh và chữ: ảnh ở trên, chữ ở pill dưới
                     frontContentHTML = `
-                        <div class="flex flex-col items-center justify-between w-full h-full p-1 sm:p-1.5 pt-3 sm:pt-4 md:pt-5 lg:pt-6 relative z-10">
-                            <div class="flex-1 flex items-center justify-center w-full mt-1.5 sm:mt-2 relative overflow-hidden z-10">
+                        <div class="flex flex-col items-center justify-between w-full h-full p-1 sm:p-1.5 pt-3 sm:pt-4 md:pt-5 relative z-10">
+                            <div class="flex-1 flex items-center justify-center w-full relative overflow-hidden z-10">
                                 ${renderFrontImages(frontItem.idStr)}
                             </div>
-                            <div class="w-[98%] bg-white rounded border border-slate-200 flex items-center justify-center py-1 shadow-sm overflow-hidden z-20" style="container-type: inline-size;">
+                            <div class="w-[98%] bg-white rounded border border-slate-200 flex items-center justify-center py-0.5 sm:py-1 shadow-sm overflow-hidden z-20" style="container-type: inline-size;">
                                 ${getResponsiveText(frontItem.word, true)}
                             </div>
                         </div>
                     `;
+                } else {
+                    frontContentHTML = '';
                 }
 
                 cover.innerHTML = frontContentHTML;
@@ -1090,7 +1098,7 @@
                 revealed.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xs text-slate-500 font-bold">Flipped</div>`;
 
                 const badge = document.createElement('div');
-                badge.className = `absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white font-black text-slate-800 text-xs sm:text-sm md:text-lg lg:text-xl w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center shadow-md border-[1.5px] sm:border-2 theme-index-badge z-30 tarot-font leading-none backface-hidden`;
+                badge.className = `absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white font-black text-slate-800 text-xs sm:text-sm md:text-base w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center shadow-md border-[1.5px] sm:border-2 theme-index-badge z-30 tarot-font leading-none backface-hidden`;
                 badge.innerHTML = i + 1;
 
                 inner.appendChild(cover); 
