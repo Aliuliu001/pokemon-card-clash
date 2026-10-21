@@ -10,7 +10,7 @@ Một dự án minigame giáo dục dạng lật thẻ bài được thiết k�
 - **Kho ảnh trực quan:** Kéo thả ảnh vào game, xem toàn bộ ảnh dưới dạng thumbnail, xóa từng ảnh hoặc nhiều ảnh một lúc. Ô ID nào thiếu ảnh sẽ tự tô đỏ trước khi lên lớp.
 - **Ảnh theo Chủ đề (Album):** Tạo nhiều album (Animals, Food, Halloween...), chọn album trước khi upload, khi chơi chỉ cần mở đúng album. Nút 🧹 tự dọn ảnh chưa dùng.
 - **Sao lưu / Khôi phục:** Tải 1 file JSON chứa bảng bài học + cài đặt + toàn bộ album ảnh. Máy bị dọn hay sang máy khác → bấm Khôi phục là mọi thứ trở lại.
-- **Thẻ "IS CHOOSING" khi không điền mặt sau:** Chỉ điền Từ/Ảnh Trước, bỏ trống Câu/Ảnh Sau → lật thẻ lên hiện ngay card nền galaxy với Pokémon của đội + 2 nút **ATTACK** (áp điểm, có thể trúng bom) / **HEAL** (bỏ qua) — lấy cảm hứng từ game pokemon-pvp.
+- **Card nền galaxy khi không điền mặt sau:** Chỉ điền Từ/Ảnh Trước, bỏ trống Câu/Ảnh Sau → lật thẻ lên thấy card nền tím sao lung linh + logo Joy + 2 Pokémon của đội. Logic điểm vẫn như cũ (nút điểm tròn + SKIP).
 - **Tùy chỉnh đa dạng:** Cho phép thay đổi số lượng thẻ bài, thời gian đếm ngược, và cách thức hiển thị (mặt trước/mặt sau).
 
 ## 📚 Tài liệu phát triển

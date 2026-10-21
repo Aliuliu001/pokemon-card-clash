@@ -145,29 +145,27 @@
   (File `AGENTS.md` bị chặn bởi cơ chế bảo vệ của tool — dùng tên tiếng Việt.)
 
 
-## Giai đoạn 11: Card "IS CHOOSING" khi mặt sau trống + Sửa layout modal (Bước 6 - 2026-10-18)
-- **Yêu cầu của thầy:** lấy card "CHARIZARD IS CHOOSING... ATTACK/HEAL" từ repo
-  pokemon-pvp làm mặt sau mặc định khi giáo viên không điền ID-back.
+
+
+## Giai đoạn 11: Card galaxy khi mặt sau trống (Bước 6 - 2026-10-21)
+- **Yêu cầu của thầy (sửa lại sau khi hiểu nhầm):** lấy **ảnh pokemon + logo**
+  từ repo pokemon-pvp làm visual đẹp khi mặt sau trống, **NHƯNG giữ nguyên logic
+  điểm** của pokemon-card-clash (nút điểm tròn + SKIP, không dùng ATTACK/HEAL).
 - **Cách làm:**
   - `renderBoard`: khi mặt sau trống → gắn cờ `isEmptyBack = true` (và vẫn tự lặp
-    mặt trước làm dữ liệu khẩn cấp, không bao giờ hiện "Missing Data").
+    mặt trước làm dữ liệu khẩn cấp).
   - `openZoomModal`: nếu `item.isEmptyBack` → hiện card galaxy (nền tím sao động,
-    2 pokemon đội mình từ PokeAPI có onerror dự phòng, logo Joy vòng tròn, chữ
-    "TÊN ĐỘI IS CHOOSING...") thay cho nội dung thường.
-  - 2 nút thay cho điểm tròn + SKIP: **⚔️ ATTACK** = áp điểm (gồm cả bom nếu trúng,
-    hiện rõ "+X Điểm" hoặc "💣 -X Điểm" trên nút) và **✚ HEAL** = bỏ qua (giống SKIP).
-  - Nổ bom gắn vào vùng còn hiển thị (modal-content-area) khi thẻ galaxy ẩn nút điểm.
-  - CSS mới: `.galaxy-bg` (gradient tím + sao chạy), `.btn-attack` / `.btn-heal`.
+    2 pokemon đội mình từ PokeAPI có onerror dự phòng, logo Joy vòng tròn, từ/câu
+    màu trắng) **NHƯNG nút điểm tròn + SKIP VẪN HIỆN bình thường** (không ẩn).
+  - CSS mới: `.galaxy-bg` (gradient tím + sao chạy).
   - Asset: copy `assets/joy_logo.png` từ pokemon-pvp.
-- **Sửa layout modal:** tiêu đề "TÊN ĐỘI'S TURN" bị cắt trên màn 633px → thêm
-  `max-h-[calc(100vh-140px)]` cho `#modal-card-content`.
+  - **Logic điểm KHÔNG ĐỔI:** `applyScoreHandler` / `skipHandler` hoạt động như cũ,
+    bom nổ trên `btnScoreContainer` như cũ.
 - **Kết quả test thật:**
-  - Bảng chỉ có Front (back trống) → lật thẻ hiện galaxy card "PIKACHU IS CHOOSING"
-    + ATTACK "+20 Điểm" / HEAL "Bỏ qua" → ATTACK cộng đúng 20 điểm, modal tự đóng ✔
-  - HEAL bỏ qua: không cộng điểm, không tăng số thẻ lật, modal đóng ✔
-  - Bảng có đủ 2 mặt → lật ra "RED FRUIT" bình thường, KHÔNG hiện galaxy ✔
-  - Bom (điểm âm): ATTACK → rung màn hình + nổ ngay trong card galaxy, modal tự
-    đóng sau hiệu ứng ✔
-  - Layout 1280×633: tiêu đề + card galaxy + 2 nút ATTACK/HEAL trọn vẹn, không cắt ✔
-  - Regression: album/backup/kho ảnh/btn-skip nguyên vẹn; static scan 83 ID khớp
-    100%; 0 lỗi JavaScript.
+  - Bảng chỉ có Front (back trống) → lật thẻ hiện galaxy card + logo + 2 Pikachu
+    + nút điểm tròn (+20) góc trên phải + nút SKIP dưới cùng ✔
+  - Nút điểm áp đúng +20, modal tự đóng ✔
+  - SKIP bỏ qua: không cộng điểm, flipped +1, modal đóng ✔
+  - Bảng có đủ 2 mặt → lật ra text bình thường, KHÔNG hiện galaxy ✔
+  - Layout 1280×633: tiêu đề + card galaxy + nút điểm + SKIP trọn vẹn, không cắt ✔
+  - 0 lỗi JavaScript.

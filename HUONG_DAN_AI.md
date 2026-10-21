@@ -36,18 +36,16 @@ loadData() → frontItemsDatabase[] + globalBackItemsDatabase[]
    │          giáo viên đã chọn cách này 2026-10-18, đừng "sửa" thành ghép cặp)
    ▼
 renderBoard('team1'|'team2') → 20 thẻ/lượt
-   - Mặt sau TRỐNG → cờ isEmptyBack=true → lật lên hiện card "IS CHOOSING"
-     galaxy (Bước 6), không bao giờ "Missing Data"
+   - Mặt sau TRỐNG → cờ isEmptyBack=true → lật lên hiện card galaxy
+     (logo Joy + 2 pokemon đội), không bao giờ "Missing Data"
    - Mặt trước TRỐNG → tự lấy mặt sau
 ```
 
 Quy tắc bất biến:
 - **Không bao giờ hiện "Missing Data"** khi lật thẻ (xem `poolOnlyIds` trong renderBoard).
-- **Card "IS CHOOSING" (Bước 6):** khi back trống, `openZoomModal` hiện card galaxy
-  (2 pokemon PokeAPI + logo Joy) với **⚔️ ATTACK** (= `applyScoreHandler`, áp điểm
-  kể cả bom) / **✚ HEAL** (= `skipHandler`, bỏ qua) thay cho nút điểm + SKIP.
-  Nổ bom phải gắn vào `#modal-content-area` khi `#btn-apply-score-container` ẩn
-  (xem `bombHost` trong applyScoreHandler).
+- **Card galaxy (visual đẹp, logic điểm GIỮ NGUYÊN):** khi back trống, `openZoomModal`
+  hiện card galaxy (nền tím sao + logo Joy + 2 pokemon PokeAPI) **NHƯNG nút điểm tròn
+  + SKIP VẪN HIỆN** (không ẩn). Logic áp điểm/bỏ qua không đổi.
 - Data mẫu `DEFAULT_JSON_DATA` KHÔNG được trỏ ID ảnh không tồn tại trong
   Front-side/Back-side. Hiện tại data mẫu không có ảnh (chỉ từ vựng) — cố tình.
 - Card grid tự co `max-height` theo `--card-rows` (CSS `@media min-width:768px`)
