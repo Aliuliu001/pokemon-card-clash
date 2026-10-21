@@ -1042,11 +1042,14 @@
                 if (!backItem) { currentBacks = [...backItemsDatabase].sort(() => Math.random() - 0.5); backItem = currentBacks.pop() || { text: "", imgId: "", time: "" }; }
 
                 // KHÔNG BAO GIỜ hiện "Missing Data":
-                // - Mặt SAU trống → tự lặp lại mặt TRƯỚC (thẻ chỉ có từ/ảnh vẫn chơi được, lật lên ôn lại + điểm)
+                // - Mặt SAU trống → hiện card "IS CHOOSING" (galaxy) ở Bước 6
                 // - Mặt TRƯỚC trống → tự lấy mặt SAU
                 const poolOnlyIds = (idStr) => (idStr || '').split(',').filter(id => id && imagesPool[id]).join(',');
-                if (!backItem.text && !backItem.imgId && (frontItem.word || frontItem.idStr)) {
-                    backItem = { text: frontItem.word, imgId: poolOnlyIds(frontItem.idStr), time: backItem.time || "" };
+                if (!backItem.text && !backItem.imgId) {
+                    backItem.isEmptyBack = true; // đánh dấu → openZoomModal hiện card IS CHOOSING
+                    if (frontItem.word || frontItem.idStr) {
+                        backItem = { text: frontItem.word, imgId: poolOnlyIds(frontItem.idStr), time: backItem.time || "", isEmptyBack: true };
+                    }
                 }
                 if (!frontItem.word && !frontItem.idStr && (backItem.text || backItem.imgId)) {
                     frontItem = { word: backItem.text, idStr: poolOnlyIds(backItem.imgId) };
@@ -1275,7 +1278,44 @@
                 btnSkip.innerHTML = "SKIP";
                 btnSkip.className = "absolute -bottom-8 md:-bottom-12 left-1/2 transform -translate-x-1/2 text-white bg-slate-700 hover:bg-slate-600 px-10 py-2.5 rounded-full font-bold shadow-[0_5px_15px_rgba(0,0,0,0.5)] z-[100] border-2 border-slate-500 transition-colors text-lg md:text-xl tracking-wider uppercase active:scale-95 focus:outline-none cursor-pointer";
             }
-            
+
+            // THẺ MẶT SAU TRỐNG (Bước 6): card "IS CHOOSING" galaxy lấy từ pokemon-pvp.
+            // Giáo viên không điền mặt sau → lật lên thấy pokemon đội mình + ATTACK/HEAL.
+            // ATTACK = áp điểm (trừ khi trúng bom), HEAL = bỏ qua.
+            if (item.isEmptyBack) {
+                const pokeId = team.config.id;
+                const pokeUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeId}.png`;
+                const pokeFallback = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokeId}.png`;
+                const rgb = team.config.rgb;
+                const scoreLabel = cardData.value > 0 ? `+${cardData.value} Điểm` : `💣 ${cardData.value} Điểm`;
+                contentArea.style.display = 'flex';
+                contentArea.innerHTML = `
+                    <div class="w-full h-full rounded-2xl flex flex-col items-center justify-center relative overflow-hidden galaxy-bg border border-indigo-500/50">
+                        <img src="${pokeUrl}" onerror="this.onerror=null;this.src='${pokeFallback}'" class="absolute left-[-5%] md:left-[2%] top-1/2 h-[75%] max-w-[40%] object-contain drop-shadow-[0_0_20px_rgba(${rgb},0.8)] z-0 pointer-events-none" style="transform: translateY(-50%);">
+                        <img src="${pokeUrl}" onerror="this.onerror=null;this.src='${pokeFallback}'" class="absolute right-[-5%] md:right-[2%] top-1/2 h-[75%] max-w-[40%] object-contain drop-shadow-[0_0_20px_rgba(${rgb},0.8)] z-0 pointer-events-none" style="transform: translateY(-50%) scaleX(-1);">
+                        <div class="relative z-10 w-28 h-28 md:w-40 md:h-40 bg-white/90 backdrop-blur-sm rounded-full border-[8px] md:border-[12px] shadow-[0_0_50px_rgba(${rgb},0.6)] flex items-center justify-center overflow-hidden" style="border-color: rgba(${rgb}, 0.8);">
+                            <img src="assets/joy_logo.png" class="w-[95%] h-[95%] object-contain drop-shadow-lg">
+                        </div>
+                        <div class="relative z-10 mt-2 text-white font-black text-base md:text-2xl tarot-font tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center px-2">${team.config.name} IS CHOOSING...</div>
+                        <div class="relative z-10 flex gap-3 md:gap-4 mt-3 mb-1">
+                            <button id="btn-attack-choosing" class="btn-attack text-sm md:text-lg">
+                                <span class="text-2xl md:text-4xl mb-1">⚔️</span> ATTACK<br><span class="text-[10px] md:text-sm text-rose-200 mt-1 uppercase">${scoreLabel}</span>
+                            </button>
+                            <button id="btn-heal-choosing" class="btn-heal text-sm md:text-lg">
+                                <span class="text-2xl md:text-4xl mb-1 text-green-300">✚</span> HEAL<br><span class="text-[10px] md:text-sm text-emerald-200 mt-1 uppercase">Bỏ qua</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                // ẩn nút điểm tròn + SKIP gốc — dùng ATTACK/HEAL thay
+                btnScoreContainer.className = 'hidden';
+                btnSkip.className = 'hidden';
+                const btnAtk = document.getElementById('btn-attack-choosing');
+                const btnHeal = document.getElementById('btn-heal-choosing');
+                if (btnAtk) { btnAtk.addEventListener('click', (e) => { e.preventDefault(); applyScoreHandler(); }); btnAtk.addEventListener('touchstart', (e) => { e.preventDefault(); applyScoreHandler(); }, { passive: false }); }
+                if (btnHeal) { btnHeal.addEventListener('click', (e) => { e.preventDefault(); skipHandler(true); }); btnHeal.addEventListener('touchstart', (e) => { e.preventDefault(); skipHandler(true); }, { passive: false }); }
+            }
+
             clearInterval(bombInterval);
             const fuseContainer = document.getElementById('fuse-container'); 
             const fuseBar = document.getElementById('fuse-bar'); 
@@ -1530,11 +1570,13 @@
                 playSoundEffect('boom');
                 const modalCard = document.getElementById('modal-card-content'); 
                 modalCard.classList.add('shake-screen');
+                // Gắn hiệu ứng nổ vào nơi còn HIỂN THỊ: thẻ "IS CHOOSING" ẩn btnScoreContainer
                 const btnScoreContainer = document.getElementById('btn-apply-score-container');
+                const bombHost = (btnScoreContainer && btnScoreContainer.offsetParent !== null) ? btnScoreContainer : document.getElementById('modal-content-area');
                 const core = document.createElement('div'); core.className = 'explosion-core';
                 const ring = document.createElement('div'); ring.className = 'explosion-ring';
-                btnScoreContainer.appendChild(core); 
-                btnScoreContainer.appendChild(ring);
+                bombHost.appendChild(core); 
+                bombHost.appendChild(ring);
 
                 triggerAvatarEffect(teamId, false);
                 showFloatingPoint(cardElement, floatText, isSpecial);

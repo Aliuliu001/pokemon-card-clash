@@ -250,3 +250,36 @@
             #game-timer-text { font-size: 0.85rem !important; }
             .restart-block { margin-top: 0.25rem !important; margin-bottom: 0.25rem !important; }
         }
+
+
+        /* ==== CARD MẶT SAU TRỐNG (Bước 6): card "IS CHOOSING" lấy từ pokemon-pvp ====
+           Khi giáo viên không điền mặt sau → lật lên hiện card galaxy + 2 pokemon
+           + logo + 2 nút ATTACK (áp điểm) / HEAL (bỏ qua). */
+        .galaxy-bg {
+            background: linear-gradient(125deg, #0f172a, #1e1b4b, #312e81, #000000);
+            background-size: 400% 400%;
+            animation: galaxyFlow 12s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes galaxyFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .galaxy-bg::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(white 1.5px, transparent 1.5px);
+            background-size: 40px 40px, 90px 90px; background-position: 0 0, 20px 20px;
+            opacity: 0.4; animation: starsMove 20s linear infinite;
+        }
+        @keyframes starsMove { from { background-position: 0 0, 20px 20px; } to { background-position: 0 -100px, 20px -50px; } }
+
+        /* Nút ATTACK / HEAL trên card IS CHOOSING */
+        .btn-attack, .btn-heal {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 1rem; border: 4px solid #fff; color: #fff;
+            font-weight: 900; line-height: 1; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s; padding: 0.75rem 1rem;
+        }
+        .btn-attack { background: linear-gradient(to bottom, #e11d48, #be123c); box-shadow: 0 10px 20px rgba(225,29,72,0.5); }
+        .btn-attack:hover { transform: scale(1.05); }
+        .btn-heal { background: linear-gradient(to bottom, #059669, #047857); box-shadow: 0 10px 20px rgba(5,150,105,0.5); }
+        .btn-heal:hover { transform: scale(1.05); }
+        .btn-attack:active, .btn-heal:active { transform: scale(0.96); }

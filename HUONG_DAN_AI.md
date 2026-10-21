@@ -36,16 +36,24 @@ loadData() → frontItemsDatabase[] + globalBackItemsDatabase[]
    │          giáo viên đã chọn cách này 2026-10-18, đừng "sửa" thành ghép cặp)
    ▼
 renderBoard('team1'|'team2') → 20 thẻ/lượt
-   - Mặt sau TRỐNG → tự lặp mặt trước (không bao giờ "Missing Data")
+   - Mặt sau TRỐNG → cờ isEmptyBack=true → lật lên hiện card "IS CHOOSING"
+     galaxy (Bước 6), không bao giờ "Missing Data"
    - Mặt trước TRỐNG → tự lấy mặt sau
 ```
 
 Quy tắc bất biến:
 - **Không bao giờ hiện "Missing Data"** khi lật thẻ (xem `poolOnlyIds` trong renderBoard).
+- **Card "IS CHOOSING" (Bước 6):** khi back trống, `openZoomModal` hiện card galaxy
+  (2 pokemon PokeAPI + logo Joy) với **⚔️ ATTACK** (= `applyScoreHandler`, áp điểm
+  kể cả bom) / **✚ HEAL** (= `skipHandler`, bỏ qua) thay cho nút điểm + SKIP.
+  Nổ bom phải gắn vào `#modal-content-area` khi `#btn-apply-score-container` ẩn
+  (xem `bombHost` trong applyScoreHandler).
 - Data mẫu `DEFAULT_JSON_DATA` KHÔNG được trỏ ID ảnh không tồn tại trong
   Front-side/Back-side. Hiện tại data mẫu không có ảnh (chỉ từ vựng) — cố tình.
 - Card grid tự co `max-height` theo `--card-rows` (CSS `@media min-width:768px`)
   để bàn chơi vừa màn hình laptop — đừng xóa block CSS `FIT MÀN HÌNH`.
+- `#modal-card-content` có `max-h-[calc(100vh-140px)]` — giữ, không thì tiêu đề
+  "…'S TURN" bị cắt trên máy 633px.
 
 ## 3. Hệ thống kho ảnh — PHẦN DỄ VỠ NHẤT, đừng xóa lung tung
 
