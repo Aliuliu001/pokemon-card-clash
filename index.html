@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=13">
+    <link rel="stylesheet" href="css/style.css?v=14">
 </head>
 <body class="p-1 md:p-2 pb-3 md:pb-3 flex flex-col items-center relative overflow-x-hidden">
 
@@ -255,15 +255,39 @@
                 <p class="text-slate-400 text-[11px] mt-2">Đủ điểm đội sẽ tiến hoá (đổi ảnh + hào quang + badge LV). 3 công tắc trên lưu lại cho lần chơi sau.</p>
             </div>
 
+
+            <!-- Task 10: BẢNG CHỌN ẢNH POKÉMON THEO NẤC ĐIỂM -->
+            <div id="poke-art-section" class="bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-600 mb-3 shadow-inner">
+                <h3 class="text-yellow-400 font-bold text-sm md:text-base uppercase mb-1">🖼️ Ảnh Pokémon (đội → theo nấc điểm)</h3>
+                <p class="text-slate-400 text-[11px] mb-2">Mỗi ô: 🔍 chọn trong <b>danh sách Pokémon (Gen 1–9 + Mega + Dynamax/Gmax)</b> · ⬆️ tải ảnh từ máy · ↺ đặt lại mặc định.
+                   Ảnh áp dụng cho ĐỘI đang mang Pokémon này, đổi xong hiện ngay trên bàn chơi.</p>
+                <div class="overflow-x-auto max-h-[46vh] overflow-y-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead class="sticky top-0 bg-slate-900 z-10">
+                            <tr class="text-slate-400 text-[11px] md:text-xs uppercase">
+                                <th class="py-1.5 pr-2 border-b border-slate-700">Đội</th>
+                                <th class="py-1.5 px-2 border-b border-slate-700 text-center">LV.1 (chưa tiến hoá)</th>
+                                <th class="py-1.5 px-2 border-b border-slate-700 text-center">LV.2</th>
+                                <th class="py-1.5 px-2 border-b border-slate-700 text-center">LV.3</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poke-art-table" class="text-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- KHO ẢNH NỘI BỘ -->
-            <div id="image-pool-dropzone" class="bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/30 mb-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-inner relative overflow-hidden">
+            <div id="image-pool-dropzone" class="bg-emerald-900/30 p-4 rounded-xl border border-emerald-500/30 mb-3 shadow-inner relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
-                <div class="relative z-10">
+                
+                <!-- Header Section -->
+                <div class="relative z-10 mb-3">
                     <h3 class="text-emerald-400 font-bold text-sm tracking-wider mb-1 uppercase">Nguồn Ảnh</h3>
                     <p class="text-slate-300 text-xs">Kéo thả hoặc tải ảnh lên. Tên file ảnh (VD: "1") dùng để điền vào bảng.</p>
                 </div>
-                <!-- ALBUM THEO CHỦ ĐỀ (Bước 5): chọn chủ đề trước khi upload, khi chơi chỉ cần mở đúng chủ đề -->
-                <div class="flex items-center gap-1.5 relative z-10 w-full md:w-auto flex-wrap mt-1">
+
+                <!-- Album Controls Row -->
+                <div class="relative z-10 flex items-center gap-1.5 flex-wrap mb-3 pb-3 border-b border-emerald-500/20">
                     <span class="text-slate-400 text-xs font-bold uppercase tracking-wide">📖 Chủ đề:</span>
                     <select id="album-select" class="bg-slate-800 border border-slate-600 text-white text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500 max-w-[180px]"></select>
                     <button id="btn-album-new" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95 whitespace-nowrap" title="Tạo album chủ đề mới (VD: Animals, Food, Halloween...)">➕ Tạo mới</button>
@@ -271,14 +295,16 @@
                     <button id="btn-album-delete" class="bg-rose-700 hover:bg-rose-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95" title="Xóa chủ đề đang mở (kèm ảnh trong đó)">🗑️</button>
                     <button id="btn-clean-unused" class="bg-amber-700 hover:bg-amber-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold shadow transition-all active:scale-95 whitespace-nowrap" title="Xóa ảnh trong album mà bảng bài học chưa dùng tới">🧹 Dọn ảnh chưa dùng</button>
                 </div>
-                <div class="flex items-center gap-2 relative z-10 w-full md:w-auto flex-wrap">
+
+                <!-- Upload & Action Buttons Row -->
+                <div class="relative z-10 flex items-center gap-2 flex-wrap">
                     <input type="file" id="image-upload-input" multiple accept="image/*" class="hidden">
-                    <button id="btn-upload-images" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-[0_4px_15px_rgba(16,185,129,0.4)] transition-all active:scale-95 whitespace-nowrap flex items-center justify-center gap-1"><span class="text-lg leading-none">⬆️</span> Upload Images</button>
+                    <button id="btn-upload-images" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-[0_4px_15px_rgba(16,185,129,0.4)] transition-all active:scale-95 whitespace-nowrap flex items-center gap-1"><span class="text-lg leading-none">⬆️</span> Upload Images</button>
                     <button id="btn-toggle-gallery" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md border border-teal-500/50 transition-all active:scale-95 whitespace-nowrap">🖼️ Kho ảnh</button>
                     <button id="btn-clear-images" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md transition-all border border-slate-500 active:scale-95">Clear</button>
-                    <span id="image-pool-count" class="text-emerald-400 font-black text-sm ml-1 whitespace-nowrap min-w-[50px]">0 ảnh</span>
-                    <span id="image-pool-size" class="text-slate-400 text-xs font-semibold ml-1 whitespace-nowrap">📦 0KB</span>
-                    <span class="flex-1 md:hidden"></span>
+                    <span id="image-pool-count" class="text-emerald-400 font-black text-sm whitespace-nowrap">0 ảnh</span>
+                    <span id="image-pool-size" class="text-slate-400 text-xs font-semibold whitespace-nowrap">📦 0KB</span>
+                    <div class="w-full md:w-auto h-px md:h-auto"></div>
                     <input type="file" id="restore-file-input" accept=".json,application/json" class="hidden">
                     <button id="btn-backup" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md border border-indigo-500/50 transition-all active:scale-95 whitespace-nowrap" title="Tải file sao lưu (bảng + cài đặt + toàn bộ kho ảnh) về máy">💾 Tải bản sao lưu</button>
                     <button id="btn-restore" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md border border-amber-500/50 transition-all active:scale-95 whitespace-nowrap" title="Khôi phục từ file sao lưu đã tải trước đó">📂 Khôi phục từ file</button>
@@ -303,12 +329,17 @@
                 <div id="image-pool-gallery" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
             </div>
 
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 mb-3">
+            <!-- Excel Instructions -->
+            <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-600/50 mb-3">
                 <p class="text-slate-300 text-xs md:text-sm">
                     Mở Excel, bôi đen cả 5 cột, copy và nhấn <b>Ctrl+V</b> vào ô đầu tiên của bảng dưới. <br>
                     <b class="text-yellow-400">Lưu ý:</b> Bỏ trống <b>ID Ảnh Sau</b> -&gt; Thẻ chỉ có Chữ to. Bỏ trống <b>Thời gian</b> -&gt; Thẻ không có Bom.
                 </p>
-                <div class="flex flex-wrap gap-2 w-full">
+            </div>
+
+            <!-- Table Control Buttons -->
+            <div class="mb-3">
+                <div class="flex flex-wrap gap-2">
                     <div class="flex items-center bg-slate-700 rounded-lg overflow-hidden border border-blue-500 shadow-inner">
                         <select id="auto-col-select" class="bg-slate-800 text-yellow-400 px-2 py-1.5 outline-none text-xs sm:text-sm font-bold border-r border-slate-500 cursor-pointer">
                             <option value="0">Cột 1 (ID Trước)</option>
@@ -384,6 +415,28 @@
     <!-- SCORE SETTINGS MODAL: ĐÃ DỜN VÀO BẢNG PHẲNG TRONG SETTINGS MODAL (Task 4) -->
 
     <!-- NHẬT KÝ ĐIỂM + HOÀN TÁC (Task 5) -->
+    <!-- Task 10: HỘP CHỌN POKÉMON (danh sách Gen 1-9 + Mega + Dynamax) -->
+    <div id="poke-picker-modal" class="fixed inset-0 bg-black/85 z-[60] hidden flex-col items-center justify-center p-3 md:p-5">
+        <div class="w-full max-w-5xl bg-slate-900 border-2 border-yellow-600/70 rounded-2xl p-3 md:p-4 shadow-2xl flex flex-col max-h-[94vh]">
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <h3 id="poke-picker-title" class="text-yellow-400 font-black text-base md:text-lg uppercase">CHỌN ẢNH POKÉMON</h3>
+                <button id="btn-poke-picker-close" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm font-bold">Đóng</button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-2 mb-2">
+                <input id="poke-search" type="text" placeholder="Tìm theo tên hoặc số (vd: pikachu, charizard-mega-x, gengar-gmax, 94)"
+                       class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:border-yellow-500">
+                <span id="poke-list-count" class="text-slate-400 text-xs self-center md:self-auto whitespace-nowrap"></span>
+            </div>
+            <div class="flex flex-col md:flex-row gap-2 mb-2 pb-2 border-b border-slate-700">
+                <input id="poke-link-input" type="text" placeholder="Hoặc dán link ảnh Pokémon (https://... hoặc data:) rồi bấm Dùng"
+                       class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:border-yellow-500">
+                <button id="btn-poke-use-link" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white text-sm font-bold">Dùng link này</button>
+            </div>
+            <div id="poke-picker-grid" class="poke-picker-grid flex-1 overflow-y-auto"></div>
+            <input type="file" id="poke-art-upload" accept="image/*" class="hidden">
+        </div>
+    </div>
+
     <div id="history-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex-col items-center justify-center p-4">
         <div class="bg-slate-800 p-4 md:p-5 rounded-2xl w-full max-w-2xl border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[85vh]">
             <h2 class="text-lg md:text-2xl font-black text-white tarot-font tracking-wider mb-3">📜 NHẬT KÝ ĐIỂM</h2>
