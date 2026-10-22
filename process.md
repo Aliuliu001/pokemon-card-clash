@@ -189,3 +189,41 @@
   - Thẻ chữ to rõ, căn giữa chuẩn xác.
   - Màn hình 1280×633 vừa khít, không còn thanh cuộn dọc (0 scrollbar).
   - Syntax check: 0 lỗi. Cache-buster bump lên `?v=10`.
+
+
+## Giai đoạn 13: LÔ 1 — Avatar artwork to + Tiến hoá Pokémon theo nấc điểm (2026-10-22)
+
+> Theo `plan.md` (quy tắc: mỗi lô đúng 2 task, xong push thầy kiểm tra mới qua lô sau).
+
+### Task 1 — Avatar Pokémon artwork to rõ
+- **Trước:** avatar tròn 56–68px dùng sprite pixel → học sinh cuối lớp không thấy.
+- **Sau:** khung avatar **96px (mobile) / 104px (laptop)**, ảnh chuyển sang
+  `official-artwork` (PokeAPI) — ảnh to, nét; `onerror` tự rơi về sprite cũ nếu link lỗi.
+- Chỗ sửa: `index.html` (2 khối avatar team), `css/style.css` (`.team-avatar-box`).
+
+### Task 2 — Tiến hoá Pokémon theo nấc điểm
+- `js/config.js`: thêm `TEAM_EVOLUTIONS` (đã kiểm tra tên bằng PokeAPI — **không dùng ID đoán mò**,
+  10029/10031/10025 thực ra là pumpkaboo/gourgeist/meowstic) rồi gán `POKEMON_TEAMS[i].evos`.
+- `js/game.js`: `setAvatarArt()`, `evoThresholds()`, `getEvolutionStage()`, `updateEvolution()`, `resetEvolution()`;
+  gọi sau khi áp điểm, trong `applyTheme`, `initGame`, và khi chỉnh ngưỡng trong bảng cài đặt.
+- **Bảng tiến hoá đã chốt (21/21 ảnh tải OK):** Pikachu→Raichu→Alolan Raichu · Charizard→Mega X→Mega Y ·
+  Mewtwo→Mega X→Mega Y · Gardevoir→Mega · Gengar→Mega→Gmax · Shaymin→Sky Forme.
+  Đội không có tiến hoá (Vaporeon, Ninetales-Alola, Pachirisu, Victini, Tyrantrum) → giữ ảnh, vẫn hiện badge LV + hào quang.
+- Ngưỡng **LV.2=150 / LV.3=400** đặt trong hộp CÀI ĐẶT ĐIỂM SỐ (2 nút +/-), lưu theo cài đặt.
+- Hiệu ứng: badge `LV.1/2/3` (vàng/xanh/tím) + hào quang nhấp nháy + âm báo khi lên cấp.
+
+### Bù trừ chiều cao (avatar cao thêm 36px mà vẫn 0 thanh cuộn)
+- `renderBoard`: lề trên bảng thẻ `pt-8 → pt-4`.
+- `index.html`: chân trang `pb-6 → pb-4`, nút RESTART `py-3 → py-1.5`, padding panel `md:p-3 → md:p-2`,
+  header `p-2 → p-1.5` + `mb-2 → mb-1`.
+- `style.css`: sàn chiều cao thẻ `105px → 92px` (công thức `(100vh - 260px)/hàng` giữ nguyên).
+
+### Kết quả test thật (trình duyệt thật 1280×633, phiên trình duyệt riêng)
+- 12 thẻ: **0 thanh cuộn**, thẻ **144×124** (bằng bản trước), avatar 104px ✔
+- 20 thẻ/lượt: **0 thanh cuộn** — bản trước bị tràn **48px** (đã ghi vào `bug.md` #1) ✔
+- Chơi thật: lật thẻ → cộng điểm 80 → **LV.2 + hào quang + ảnh Raichu (26.png)** ✔
+- RESTART → điểm 0, LV.1, tắt hào quang, ảnh về 25.png ✔
+- Đội không có tiến hoá (Pachirisu, 500đ) → badge LV.3 + hào quang, ảnh giữ nguyên ✔
+- Hộp CÀI ĐẶT ĐIỂM SỐ: mở/đóng OK, 2 ô ngưỡng tiến hoá +/- chạy đúng (150↔100↔150) ✔
+- 0 lỗi JavaScript khi tải + khi chơi; `node --check` 2 file sạch; cache-buster `?v=11`.
+- **Bẫy test (ghi vào `bug.md` #3):** đổi số thẻ rồi đo ngay → Tailwind CDN chưa sinh class → bị đo nhầm.

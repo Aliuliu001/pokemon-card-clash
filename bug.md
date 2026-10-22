@@ -11,7 +11,9 @@
 
 | # | Ngày | Task/Lô | Mô tả lỗi (thầy nói / em thấy) | Nơi gây lỗi (file - hàm) | Cách sửa | Trạng thái |
 |---|---|---|---|---|---|---|
-| _chưa có_ | | | | | | |
+| 1 | 2026-10-22 | Lô 1 | **Bản trước (không phải lỗi mới):** cấu hình 20 thẻ/lượt ở màn 1280×633 bị tràn thanh cuộn **48px** | `css/style.css` — khối FIT MÀN HÌNH + lề các khối ngoài thẻ | Bù lề bảng thẻ/restart/panel + sàn chiều cao thẻ `105px→92px` | ✅ |
+| 2 | 2026-10-22 | Lô 1 | Avatar artwork to hơn làm header cao thêm **36px** → có nguy cơ tràn màn hình | `index.html` + `css/style.css` + `js/game.js` (renderBoard) | Gọn lề bảng thẻ `pt-8→pt-4`, chân trang `pb-6→pb-4`, nút RESTART `py-3→py-1.5`, padding header/panel | ✅ |
+| 3 | 2026-10-22 | Lô 1 (quy trình test) | Khi đổi số thẻ rồi đo **ngay**, layout còn vỡ (thẻ bị đầy chiều ngang) — **Tailwind CDN cần ~1s để sinh class mới** | quy trình test | Sau khi đổi `CARDS_PER_TEAM` → đợi ~1–1,5s rồi mới đo | ✅ (bẫy, đã ghi lại) |
 
 ---
 
@@ -26,7 +28,11 @@
 5. **Không xóa block CSS `FIT MÀN HÌNH`** — mất là bàn chơi tràn thanh cuộn trên laptop.
 6. **`let` toàn cục không gắn vào `window`** — khi test gọi thẳng tên biến, không qua `window.xxx`.
 7. **Zalo/riền chặn localStorage** → mọi chỗ lưu phải qua `SafeStore`, không dùng `localStorage` trực tiếp.
-8. **`confirm()`/`prompt()` chặn thread test** — stub `window.confirm = () => true` trước khi bấm nút test.
+8. **Trình duyệt test dễ bị "chim sẻ"**: tab bị session/task khác giành mất hoặc tự về `about:blank`
+   giữa chừng → test dở dang ra kết quả sai (vd `initGame is not defined`). **Cách này đã ăn tiền:**
+   chạy test với **trình duyệt phiên riêng** (`session="pokemon-clash"`), mỗi lần mất tab thì
+   `ensure_real_tab()` + mở lại URL + `Network.setCacheDisabled` trước khi đo.
+9. **`confirm()`/`prompt()` chặn thread test** — stub `window.confirm = () => true` trước khi bấm nút test.
 
 ---
 

@@ -238,13 +238,47 @@
 
         /* ==== FIT MÀN HÌNH: thẻ bài to rõ, tự co linh hoạt không bị bẹp dúm ==== */
         @media (min-width: 768px) {
-            .card { max-height: max(105px, calc((100vh - 260px) / var(--card-rows, 4))) !important; }
+            .card { max-height: max(92px, calc((100vh - 260px) / var(--card-rows, 4))) !important; }
             [style*="--card-rows"] { row-gap: 8px !important; padding-top: 4px !important; }
         }
-        /* Thu gọn các thành phần ngoài thẻ để dành trọn không gian cho thẻ bài */
-        .team-avatar-box { width: 3.5rem !important; height: 3.5rem !important; }
+        /* Avatar ARTWORK to rõ (Lô 1 - Task 1) — học sinh cuối lớp vẫn thấy */
+        .team-avatar-box { width: 4.5rem !important; height: 4.5rem !important; }
         @media (min-width: 768px) {
-            .team-avatar-box { width: 4.25rem !important; height: 4.25rem !important; }
+            .team-avatar-box { width: 6.5rem !important; height: 6.5rem !important; }
+        }
+
+        /* ====TIẾN HOÁ POKÉMON (Lô 1 - Task 2): badge LV + hào quang theo cấp ==== */
+        .evo-badge {
+            position: absolute; bottom: -7px; right: -9px; z-index: 30;
+            padding: 1px 7px; border-radius: 9999px;
+            font-size: 10px; font-weight: 900; line-height: 1.3;
+            background: #0f172a; color: #fde047;
+            border: 2px solid #facc15;
+            box-shadow: 0 0 8px rgba(250, 204, 21, .85);
+            letter-spacing: .5px; white-space: nowrap; pointer-events: none;
+        }
+        @media (min-width: 768px) {
+            .evo-badge { font-size: 12px; padding: 2px 9px; bottom: -9px; right: -11px; }
+        }
+        .evo-badge.lv2 { background: #052e16; color: #bbf7d0; border-color: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,.9); }
+        .evo-badge.lv3 { background: #2e1065; color: #f0abfc; border-color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,.95); }
+        .evo-badge.evo-pop { animation: evoPop .8s cubic-bezier(.2,1.6,.4,1); }
+        @keyframes evoPop {
+            0% { transform: scale(.3) rotate(-15deg); }
+            55% { transform: scale(1.7) rotate(8deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        .team-avatar-box.evo-aura-2 {
+            box-shadow: 0 0 0 3px rgba(34,197,94,.95), 0 0 24px rgba(34,197,94,.8) !important;
+            animation: auraPulse 1.8s ease-in-out infinite;
+        }
+        .team-avatar-box.evo-aura-3 {
+            box-shadow: 0 0 0 3px rgba(168,85,247,.95), 0 0 30px rgba(168,85,247,.9) !important;
+            animation: auraPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes auraPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.35); }
         }
         #game-timer-container { width: 3.5rem !important; height: 3.5rem !important; margin: 0.25rem 0 !important; }
         #game-timer-text { font-size: 0.95rem !important; }

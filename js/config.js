@@ -30,7 +30,20 @@ const MAX_ROWS = 100;
             { id: 'LOSE_75',  type: 'nerf',   name: 'LOSE 75%',    icon: '🛥️🕊️',  desc: 'Thảm họa: Du thuyền bốc hơi mất 75% điểm.', count: 1 }
         ];
 
-        let SCORE_SETTINGS = { posMin: 10, posMax: 100, negMin: 10, negMax: 40 };
+        let SCORE_SETTINGS = { posMin: 10, posMax: 100, negMin: 10, negMax: 40, evoLv2: 150, evoLv3: 400 };
+
+        // TIẾN HOÁ POKÉMON (Lô 1 - Task 2): mỗi đội tối đa 3 nấc theo điểm.
+        // id = ID official-artwork trên PokeAPI (đã kiểm tra URL hoạt động).
+        // Đội không có trong danh sách → giữ artwork hiện tại, VẪN hiện badge LV + hào quang.
+        const TEAM_EVOLUTIONS = {
+            '25':  [ { id: '26',   name: 'RAICHU' },            { id: '10100', name: 'ALOLAN RAICHU' } ],
+            '6':   [ { id: '10034', name: 'MEGA CHARIZARD X' }, { id: '10035', name: 'MEGA CHARIZARD Y' } ],
+            '150': [ { id: '10043', name: 'MEGA MEWTWO X' },    { id: '10044', name: 'MEGA MEWTWO Y' } ],
+            '282': [ { id: '10051', name: 'MEGA GARDEVOIR' } ],
+            '94':  [ { id: '10038', name: 'MEGA GENGAR' },      { id: '10202', name: 'GMAX GENGAR' } ],
+            '492': [ { id: '10006', name: 'SHAYMIN SKY FORME' } ]
+        };
+        POKEMON_TEAMS.forEach(p => { p.evos = TEAM_EVOLUTIONS[p.id] || []; });
 
         const EFFECT_SETTINGS = { explosionDelayMs: 1500, freezeDelayMs: 1500 };
         const AVATAR_SETTINGS = { happyEffectEnabled: true, sadEffectEnabled: true };

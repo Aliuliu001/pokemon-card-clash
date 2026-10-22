@@ -616,6 +616,12 @@
             document.getElementById('val-posMax').innerText = SCORE_SETTINGS.posMax;
             document.getElementById('val-negMin').innerText = '-' + SCORE_SETTINGS.negMin;
             document.getElementById('val-negMax').innerText = '-' + SCORE_SETTINGS.negMax;
+            // Ngưỡng tiến hoá (file cài đặt cũ không có 2 trường này → dùng mặc định)
+            const th = evoThresholds();
+            SCORE_SETTINGS.evoLv2 = th.lv2;
+            SCORE_SETTINGS.evoLv3 = th.lv3;
+            document.getElementById('val-evoLv2').innerText = th.lv2;
+            document.getElementById('val-evoLv3').innerText = th.lv3;
         });
         document.getElementById('btn-close-score-settings').addEventListener('click', () => {
             document.getElementById('score-settings-modal').classList.add('hidden');
@@ -624,6 +630,11 @@
         });
         
         window.updateScoreSetting = function(key, delta) {
+            // Chuẩn hoá ngưỡng tiến hoá (cài đặt lưu từ bản cũ chưa có 2 trường này)
+            const th0 = evoThresholds();
+            if (SCORE_SETTINGS.evoLv2 === undefined) SCORE_SETTINGS.evoLv2 = th0.lv2;
+            if (SCORE_SETTINGS.evoLv3 === undefined) SCORE_SETTINGS.evoLv3 = th0.lv3;
+
             let newVal = SCORE_SETTINGS[key] + delta;
             
             if (key === 'posMin') {
@@ -638,6 +649,12 @@
             } else if (key === 'negMax') {
                 if (newVal < SCORE_SETTINGS.negMin) newVal = SCORE_SETTINGS.negMin;
                 if (newVal > 500) newVal = 500;
+            } else if (key === 'evoLv2') {
+                if (newVal < 50) newVal = 50;
+                if (newVal > SCORE_SETTINGS.evoLv3 - 50) newVal = SCORE_SETTINGS.evoLv3 - 50;
+            } else if (key === 'evoLv3') {
+                if (newVal < SCORE_SETTINGS.evoLv2 + 50) newVal = SCORE_SETTINGS.evoLv2 + 50;
+                if (newVal > 99999) newVal = 99999;
             }
 
             SCORE_SETTINGS[key] = newVal;
@@ -646,6 +663,12 @@
             document.getElementById('val-posMax').innerText = SCORE_SETTINGS.posMax;
             document.getElementById('val-negMin').innerText = '-' + SCORE_SETTINGS.negMin;
             document.getElementById('val-negMax').innerText = '-' + SCORE_SETTINGS.negMax;
+            document.getElementById('val-evoLv2').innerText = SCORE_SETTINGS.evoLv2;
+            document.getElementById('val-evoLv3').innerText = SCORE_SETTINGS.evoLv3;
+            if (key === 'evoLv2' || key === 'evoLv3') {
+                updateEvolution('team1'); // chỉnh ngưỡng xong thấy ngay cấp độ đổi
+                updateEvolution('team2');
+            }
             autoSave();
         };
 
@@ -896,6 +919,74 @@
             } 
         });
 
+        // ==== ẢNH AVATAR ARTWORK + TIẾN HOÁ POKÉMON (Lô 1 - Task 1 & 2) ====
+        const ARTWORK_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+        const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+
+        function setAvatarArt(teamKey, pokeId) {
+            const img = document.getElementById(`${teamKey}-avatar`);
+            if (!img) return;
+            // Ảnh artwork to, nét; nếu link lỗi → tự rơi về sprite pixel cũ (không bao giờ để ảnh trống)
+            img.onerror = function () { img.onerror = null; img.src = SPRITE_BASE + pokeId + '.png'; };
+            img.src = ARTWORK_BASE + pokeId + '.png';
+        }
+
+        function evoThresholds() {
+            const lv2 = Math.max(50, parseInt(SCORE_SETTINGS.evoLv2, 10) || 150);
+            const lv3 = Math.max(lv2 + 50, parseInt(SCORE_SETTINGS.evoLv3, 10) || 400);
+            return { lv2, lv3 };
+        }
+
+        function getEvolutionStage(teamKey) {
+            const s = teams[teamKey].score;
+            const t = evoThresholds();
+            if (s >= t.lv3) return 3;
+            if (s >= t.lv2) return 2;
+            return 1;
+        }
+
+        function updateEvolution(teamKey) {
+            const team = teams[teamKey];
+            const stage = getEvolutionStage(teamKey);
+            if (team.evoStage === stage) return;
+            const prev = team.evoStage || 1;
+            team.evoStage = stage;
+
+            const evos = team.config.evos || [];
+            let artId = team.config.id, artName = team.config.name;
+            if (stage >= 2 && evos.length) {
+                const idx = Math.min(stage - 2, evos.length - 1); // hết dạng tiến hoá → giữ dạng mạnh nhất
+                artId = evos[idx].id;
+                artName = evos[idx].name;
+            }
+            if (!team.config.customImg) setAvatarArt(teamKey, artId);
+
+            const badge = document.getElementById(`${teamKey}-level`);
+            if (badge) {
+                badge.className = 'evo-badge' + (stage === 2 ? ' lv2' : stage === 3 ? ' lv3' : '');
+                badge.innerText = 'LV.' + stage;
+                badge.title = stage === 1 ? `Chưa tiến hoá — ${team.config.name}` : `Đã tiến hoá: ${artName}`;
+                if (stage > prev) { badge.classList.remove('evo-pop'); void badge.offsetWidth; badge.classList.add('evo-pop'); }
+            }
+
+            const box = document.querySelector(`#${teamKey}-panel .team-avatar-box`);
+            if (box) {
+                box.classList.remove('evo-aura-2', 'evo-aura-3');
+                if (stage === 2) box.classList.add('evo-aura-2');
+                if (stage === 3) box.classList.add('evo-aura-3');
+            }
+            if (stage > prev) playSoundEffect('match'); // âm báo khi tiến hoá
+        }
+
+        function resetEvolution(teamKey) {
+            const team = teams[teamKey];
+            team.evoStage = 1;
+            const badge = document.getElementById(`${teamKey}-level`);
+            if (badge) { badge.className = 'evo-badge'; badge.innerText = 'LV.1'; badge.title = `Chưa tiến hoá — ${team.config.name}`; }
+            const box = document.querySelector(`#${teamKey}-panel .team-avatar-box`);
+            if (box) box.classList.remove('evo-aura-2', 'evo-aura-3');
+        }
+
         function applyTheme(teamKey) {
             const team = teams[teamKey];
             const panel = document.getElementById(`${teamKey}-panel`);
@@ -907,11 +998,13 @@
             
             const avatarImg = document.getElementById(`${teamKey}-avatar`);
             if (team.config.customImg) {
+                avatarImg.onerror = null;
                 avatarImg.src = team.config.customImg;
             } else {
-                avatarImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${team.config.id}.png`; 
+                setAvatarArt(teamKey, team.config.id);
             }
-            avatarImg.onerror = null;
+            team.evoStage = 0;      // ép vẽ lại cấp tiến hoá theo đội mới chọn
+            updateEvolution(teamKey);
             document.getElementById('main-title').innerText = `CLASH: ${teams.team1.config.name} vs ${teams.team2.config.name}`;
             renderBoard(teamKey);
         }
@@ -1022,7 +1115,7 @@
             else if (CARDS_PER_TEAM === 16) gridClass = 'grid-cols-4';
             else if (CARDS_PER_TEAM === 20) gridClass = 'grid-cols-4 sm:grid-cols-5';
 
-            board.className = `grid ${gridClass} gap-x-1 gap-y-4 sm:gap-x-1.5 sm:gap-y-6 md:gap-x-2 md:gap-y-8 lg:gap-y-10 perspective flex-1 pt-4 sm:pt-6 lg:pt-8 mt-1`;
+            board.className = `grid ${gridClass} gap-x-1 gap-y-4 sm:gap-x-1.5 sm:gap-y-6 md:gap-x-2 md:gap-y-8 lg:gap-y-10 perspective flex-1 pt-3 sm:pt-4 lg:pt-4 mt-0.5`;
             // Số hàng thẻ — CSS dùng để co thẻ vừa chiều cao màn hình (không phải cuộn xuống)
             const cardRowsForHeight = (CARDS_PER_TEAM === 9) ? 3 : (CARDS_PER_TEAM === 12) ? 3 : 4;
             board.style.setProperty('--card-rows', cardRowsForHeight);
@@ -1552,6 +1645,10 @@
             teams.team2.scoreEl.innerText = teams.team2.score; 
             teams.team2.scoreEl.classList.remove('animate-pop'); void teams.team2.scoreEl.offsetWidth; teams.team2.scoreEl.classList.add('animate-pop');
 
+            // Tiến hoá Pokémon theo điểm (Lô 1 - Task 2)
+            updateEvolution('team1');
+            updateEvolution('team2');
+
             if(isGoodOutcome) {
                 playSoundEffect('match'); 
                 triggerAvatarEffect(teamId, true);
@@ -1869,6 +1966,7 @@
                 document.getElementById(`${t}-shield-container`).classList.remove('opacity-100', 'scale-100');
                 document.getElementById(`${t}-shield-container`).classList.add('opacity-0', 'scale-150');
                 document.getElementById(`${t}-avatar`).classList.remove('avatar-bounce', 'avatar-shake');
+                resetEvolution(t); // về LV.1 khi bắt đầu ván mới
                 document.getElementById(`${t}-fireworks`).classList.add('hidden');
                 document.getElementById(`${t}-fireworks`).classList.remove('fireworks-active');
                 const waves = document.getElementById(`${t}-panel`).querySelectorAll('.win-wave, .celebration-glow');

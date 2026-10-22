@@ -9,7 +9,7 @@
 > - Sau mọi lần sửa code: bump `?v=N` trong `index.html` (3 chỗ) rồi mới push.
 > - Thông báo/alert tiếng Việt, giao diện tiếng Anh.
 
-**Cập nhật lần cuối:** 2026-10-22
+**Cập nhật lần cuối:** 2026-10-22 — **LÔ 1 ĐÃ XONG & PUSH** (xem mục Kết quả nghiệm thu bên dưới)
 
 ---
 
@@ -19,8 +19,8 @@
 
 | Lô | Task | Mô tả ngắn | Trạng thái |
 |---|---|---|---|
-| **Lô 1** | Task 1 | Avatar Pokémon artwork to rõ (thay sprite nhỏ) | ⬜ Chưa làm |
-| **Lô 1** | Task 2 | Tiến hoá Pokémon theo nấc điểm | ⬜ Chưa làm |
+| **Lô 1** | Task 1 | Avatar Pokémon artwork to rõ (thay sprite nhỏ) | ✅ Xong 2026-10-22 |
+| **Lô 1** | Task 2 | Tiến hoá Pokémon theo nấc điểm | ✅ Xong 2026-10-22 |
 | **Lô 2** | Task 3 | Gom toàn bộ nút điều khiển vào 1 thanh công cụ | ⬜ Chưa làm |
 | **Lô 2** | Task 4 | Cài đặt gộp 1 bảng phẳng + tách công tắc âm thanh | ⬜ Chưa làm |
 | **Lô 3** | Task 5 | Nhật ký điểm + nút ↶ Hoàn tác | ⬜ Chưa làm |
@@ -132,6 +132,27 @@
   xem lại được qua nhiều buổi (lưu localStorage, có trong file sao lưu JSON).
 
 ---
+
+---
+
+### 📸 KẾT QUẢ NGHIỆM THU LÔ 1 (2026-10-22) — ĐÃ PUSH
+
+**Cách làm thực tế (khác 1 chút so dự kiến ở trên):** bảng tiến hoá đặt trong `js/config.js`
+dạng `TEAM_EVOLUTIONS` rồi gán thẳng vào `POKEMON_TEAMS[i].evos` — đọc/duyệt dễ hơn là sửa 11 dòng.
+
+**Nghiệm thu thật (trình duyệt thật, 1280×633):**
+- ✅ Avatar **68px → 104px**, đổi sang ảnh **official-artwork** (to, nét). 21/21 link ảnh tải thành công
+  (gồm cả dạng mega/forme), có dự phòng rơi về sprite nếu link lỗi.
+- ✅ Tiến hoá chạy đúng luồng chơi thật: lật thẻ → cộng điểm → **badge LV.2/LV.3 + hào quang xanh/tím + ảnh đổi**
+  (Pikachu→Raichu→Alolan Raichu, Charizard→Mega X...); đội không có tiến hoá (Pachirisu...) vẫn hiện badge LV + hào quang.
+- ✅ Ngưỡng LV.2/LV.3 chỉnh được trong hộp **CÀI ĐẶT ĐIỂM SỐ** (mặc định 150 / 400), lưu lại qua lần tải trang.
+- ✅ Bấm RESTART → điểm 0, về LV.1, tắt hào quang, ảnh về dạng gốc.
+- ✅ **0 thanh cuộn dọc** ở cả cấu hình 12 thẻ (của thầy) lẫn 20 thẻ/lượt — bản trước cấu hình **20 thẻ bị tràn 48px**.
+- ✅ Thẻ bài 12 thẻ vẫn **144×124** (không nhỏ đi so với bản trước).
+- ✅ 0 lỗi JavaScript khi tải và khi chơi; `node --check` sạch; cache-buster `?v=11`.
+
+**Chiều cao bị bù trừ** (để avatar to mà màn hình vẫn vừa): gọn lề bảng thẻ (`pt-8→pt-4`), lề chân trang,
+nút RESTART (`py-3→py-1.5`), padding header/panel, và sàn chiều cao thẻ `105px→92px`.
 
 ## B. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
 

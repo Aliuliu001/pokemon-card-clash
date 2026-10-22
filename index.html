@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <link rel="stylesheet" href="css/style.css?v=11">
 </head>
-<body class="p-1 md:p-2 pb-4 md:pb-6 flex flex-col items-center relative overflow-x-hidden">
+<body class="p-1 md:p-2 pb-3 md:pb-4 flex flex-col items-center relative overflow-x-hidden">
 
     <!-- Header (Đã ẩn Tiêu đề & Cân chỉnh Timer) -->
     <div class="w-full flex flex-col items-center justify-center z-10 pointer-events-none">
@@ -32,8 +32,8 @@
     <div class="w-full max-w-[1920px] px-1 md:px-2 flex flex-col md:flex-row gap-1.5 md:gap-3">
         
         <!-- TEAM 1 -->
-        <div id="team1-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-3 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 234, 179, 8; --t-main: #eab308; --t-light: #fef08a; --t-dark: #a16207; --t-text: #fde047;">
-            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
+        <div id="team1-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-2 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 234, 179, 8; --t-main: #eab308; --t-light: #fef08a; --t-dark: #a16207; --t-text: #fde047;">
+            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-1.5 mb-1 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
                     <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
                         <div class="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 team-avatar-box flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
@@ -42,7 +42,8 @@
                                 <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
                             </div>
 
-                            <img id="team1-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" class="w-full h-full object-contain p-2 md:p-3 transition-transform duration-300 scale-125 z-10 relative" alt="Avatar">
+                            <img id="team1-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" class="w-full h-full object-contain p-1 md:p-2 transition-transform duration-300 z-10 relative" alt="Avatar">
+                            <span id="team1-level" class="evo-badge" title="Cấp độ tiến hoá">LV.1</span>
                             <div id="team1-sad-bubbles" class="absolute inset-0 pointer-events-none z-20 flex justify-center"></div>
                             <div id="team1-fireworks" class="absolute inset-[-20px] z-0 pointer-events-none hidden"></div>
                         </div>
@@ -64,8 +65,8 @@
         </div>
 
         <!-- TEAM 2 -->
-        <div id="team2-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-3 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 239, 68, 68; --t-main: #ef4444; --t-light: #fca5a5; --t-dark: #b91c1c; --t-text: #fca5a5;">
-            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-2 mb-2 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
+        <div id="team2-panel" class="w-full md:w-1/2 border-2 rounded-2xl md:rounded-3xl p-1.5 md:p-2 flex flex-col theme-container transition-all duration-500 relative" style="--t-rgb: 239, 68, 68; --t-main: #ef4444; --t-light: #fca5a5; --t-dark: #b91c1c; --t-text: #fca5a5;">
+            <div class="sticky top-1 md:top-2 z-40 bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 md:p-1.5 mb-1 shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-slate-600 transition-all">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 md:pb-2">
                     <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 pr-2">
                         <div class="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 team-avatar-box flex items-center justify-center rounded-full border-2 md:border-4 drop-shadow-xl theme-avatar-bg bg-slate-900 z-10 overflow-visible">
@@ -74,7 +75,8 @@
                                 <span class="text-6xl md:text-8xl drop-shadow-[0_0_15px_rgba(59,130,246,0.8)] filter">🛡️</span>
                             </div>
 
-                            <img id="team2-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png" class="w-full h-full object-contain p-2 md:p-3 transition-transform duration-300 scale-125 z-10 relative" alt="Avatar">
+                            <img id="team2-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png" class="w-full h-full object-contain p-1 md:p-2 transition-transform duration-300 z-10 relative" alt="Avatar">
+                            <span id="team2-level" class="evo-badge" title="Cấp độ tiến hoá">LV.1</span>
                             <div id="team2-sad-bubbles" class="absolute inset-0 pointer-events-none z-20 flex justify-center"></div>
                             <div id="team2-fireworks" class="absolute inset-[-20px] z-0 pointer-events-none hidden"></div>
                         </div>
@@ -100,7 +102,7 @@
     <!-- Center Control & Bottom Tools -->
     <div class="restart-block mt-2 mb-2 md:mt-5 md:mb-5 text-center w-full flex flex-col items-center gap-6 px-4">
         <!-- Nút Restart -->
-        <button id="btn-reset" class="bg-gradient-to-b from-slate-200 to-slate-400 hover:from-white hover:to-slate-300 text-slate-900 font-black text-sm md:text-lg py-3 px-12 rounded-full shadow-[0_4px_0_#475569,0_10px_15px_rgba(0,0,0,0.4)] hover:shadow-[0_2px_0_#475569,0_5px_10px_rgba(0,0,0,0.4)] hover:translate-y-[2px] active:shadow-[0_0px_0_#475569] active:translate-y-[4px] transition-all tarot-font tracking-widest border border-white/50">
+        <button id="btn-reset" class="bg-gradient-to-b from-slate-200 to-slate-400 hover:from-white hover:to-slate-300 text-slate-900 font-black text-sm md:text-lg py-1.5 px-10 rounded-full shadow-[0_4px_0_#475569,0_10px_15px_rgba(0,0,0,0.4)] hover:shadow-[0_2px_0_#475569,0_5px_10px_rgba(0,0,0,0.4)] hover:translate-y-[2px] active:shadow-[0_0px_0_#475569] active:translate-y-[4px] transition-all tarot-font tracking-widest border border-white/50">
             RESTART GAME
         </button>
     </div>
@@ -312,7 +314,7 @@
 
     <!-- SCORE SETTINGS MODAL (SNORLAX MODAL) -->
     <div id="score-settings-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-4">
-        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-md border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col">
+        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-md border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[95vh] overflow-y-auto">
             <div class="text-center mb-4">
                 <div class="text-6xl mb-2">🐻💤</div>
                 <h2 class="text-xl md:text-2xl font-black text-white tarot-font tracking-wider">CÀI ĐẶT ĐIỂM SỐ</h2>
@@ -359,8 +361,28 @@
                         </div>
                     </div>
                 </div>
+                <div class="bg-slate-900 p-3 rounded-xl border border-yellow-600/70">
+                    <h3 class="text-yellow-400 font-bold mb-2 text-center text-sm">⚡ TIẾN HOÁ POKÉMON (điểm để lên cấp)</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-300 text-sm">Lên LV.2:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('evoLv2', -50)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-evoLv2" class="w-12 text-center text-white font-black text-lg">150</span>
+                            <button onclick="updateScoreSetting('evoLv2', 50)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-300 text-sm">Lên LV.3:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateScoreSetting('evoLv3', -50)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">-</button>
+                            <span id="val-evoLv3" class="w-12 text-center text-white font-black text-lg">400</span>
+                            <button onclick="updateScoreSetting('evoLv3', 50)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white shadow-md active:scale-95">+</button>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-[11px] text-center mt-2">Đội đủ điểm sẽ tiến hoá: ảnh đổi sang dạng mạnh hơn + hào quang + badge LV.</p>
+                </div>
             </div>
-            
+
             <div class="flex justify-end mt-6">
                 <button id="btn-close-score-settings" class="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-colors w-full shadow-lg active:scale-95 text-lg">Hoàn Tất</button>
             </div>
@@ -401,8 +423,8 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=10"></script>
-    <script src="js/game.js?v=10"></script>
+    <script src="js/config.js?v=11"></script>
+    <script src="js/game.js?v=11"></script>
 
 </body>
 </html>
