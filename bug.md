@@ -14,6 +14,7 @@
 | 1 | 2026-10-22 | Lô 1 | **Bản trước (không phải lỗi mới):** cấu hình 20 thẻ/lượt ở màn 1280×633 bị tràn thanh cuộn **48px** | `css/style.css` — khối FIT MÀN HÌNH + lề các khối ngoài thẻ | Bù lề bảng thẻ/restart/panel + sàn chiều cao thẻ `105px→92px` | ✅ |
 | 2 | 2026-10-22 | Lô 1 | Avatar artwork to hơn làm header cao thêm **36px** → có nguy cơ tràn màn hình | `index.html` + `css/style.css` + `js/game.js` (renderBoard) | Gọn lề bảng thẻ `pt-8→pt-4`, chân trang `pb-6→pb-4`, nút RESTART `py-3→py-1.5`, padding header/panel | ✅ |
 | 4 | 2026-10-22 | Task 8 | Mở hộp **Kết thúc** (`triggerWinCelebration`) làm trang bị tràn **53px** — banner `🏆 ... WINS!` vốn là `position:fixed` nhưng CSS của nó ép `display:block` → thành khối thường đẩy bàn chơi xuống | `css/style.css` (`#global-status`) + `js/game.js` (`triggerWinCelebration`) | Tách lớp phủ `.status-overlay` (fixed, z-45, nội dung căn giữa) khỏi bản in-flow; bấm RESTART phải gỡ class này | ✅ 2026-10-22 |
+| 6 | 2026-10-22 | UI do thầy báo | Ô nội dung trên thẻ là **màu trắng chói** (thẻ đã lật, ô chữ ở pill, hộp phóng to) và ảnh tải lên (nền trắng sẵn trong file) hiện **viền/sân trắng** → nhìn không đẹp | `js/game.js` (20 chỗ: `renderFrontImages`, `renderBackImages`, `openZoomModal`, `applyScoreHandler`) + `css/style.css` | Thay `bg-white/bg-slate-100` bằng lớp `.card-paper` (nền giấy kem gradient) + `.card-chip`; ảnh dùng `mix-blend-multiply` trong `.card-frame` → **phần trắng của ảnh chuyển thành màu nền giấy**, hết viền trắng | ✅ 2026-10-22 |
 | 5 | 2026-10-22 | Task 3 | **Lỗi có sẵn từ trước:** đồng hồ đếm ngược hiện ra lúc lật thẻ đầu tiên (`startGameGlobalTimer` → bỏ class `hidden`) làm trang tràn **53px** — bản cũ cũng bị, nay mới bị phát hiện khi test kỹ | `index.html` (khối `#game-timer-container`) + `css/style.css` | Chuyển đồng hồ vào trong `#game-toolbar` (dãn `3.5rem→2.75rem`, margin 0) → không còn chiếm chiều cao trang; đã test lúc đồng hồ đang chạy: 0 tràn | ✅ 2026-10-22 |
 | 3 | 2026-10-22 | Lô 1 (quy trình test) | Khi đổi số thẻ rồi đo **ngay**, layout còn vỡ (thẻ bị đầy chiều ngang) — **Tailwind CDN cần ~1s để sinh class mới** | quy trình test | Sau khi đổi `CARDS_PER_TEAM` → đợi ~1–1,5s rồi mới đo | ✅ (bẫy, đã ghi lại) |
 
@@ -44,4 +45,5 @@
 |---|---|---|
 | 2026-10-22 | Tạo file `bug.md` + `plan.md` | Bắt đầu Phase 1 |
 | 2026-10-22 | Sửa lỗi #4 (banner kết thúc tràn 53px) + lỗi #5 (đồng hồ đếm ngược tràn 53px — có sẵn từ trước) | Task 3–8 |
+| 2026-10-22 | Sửa UI ô trắng trên thẻ (bug #6): 20 chỗ đổi sang nền giấy ấm + blend ảnh | UI ảnh |
 | 2026-10-22 | Ghi thêm bẫy: test tràn màn hình phải ở **mọi tình huống** (mới tải · đang chơi có đồng hồ · game over · máy chiếu), không chỉ lúc mới mở trang | Quy trình test |

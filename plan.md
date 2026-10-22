@@ -9,7 +9,7 @@
 > - Sau mọi lần sửa code: bump `?v=N` trong `index.html` (3 chỗ) rồi mới push.
 > - Thông báo/alert tiếng Việt, giao diện tiếng Anh.
 
-**Cập nhật lần cuối:** 2026-10-22 — **PHASE 1 ĐẦY ĐỦ (Task 1→8) ĐÃ XONG & PUSH** (thầy duyệt 'làm hết mọi bước, không chờ lô')
+**Cập nhật lần cuối:** 2026-10-22 — PHASE 1 (Task 1→8) XONG + Task 9 sửa UI ô trắng (`?v=13`) (thầy duyệt 'làm hết mọi bước, không chờ lô')
 
 ---
 
@@ -190,6 +190,17 @@ nút RESTART (`py-3→py-1.5`), padding header/panel, và sàn chiều cao thẻ
 2. Đồng hồ đếm ngược hiện ra lúc chơi → tràn 53px (lỗi **có sẵn**, bản cũ cũng vậy) → chuyển đồng hồ vào thanh công cụ.
 
 ---
+
+
+### ✅ Task 9 (ngoài plan, thầy báo khi xem ảnh) — UI nội dung thẻ: bỏ nền trắng (2026-10-22) — PUSH `?v=13`
+- **Vấn đề:** ô chữ/ảnh trên thẻ (đã lật, pill chữ ở mặt trước, hộp phóng to) đều là **trắng chói**;
+  ảnh clipart/nhóm chữ có sẵn nền trắng hiện thêm sân trắng → nhìn không hài hoà.
+- **Cách làm:** 20 chỗ trong `js/game.js` đổi sang lớp `.card-paper` / `.card-frame` / `.card-chip`
+  (nền giấy kem gradient, viền nâu nhạt, đổ bóng trong) + CSS mới trong `style.css`;
+  ảnh trong khung dùng `mix-blend-multiply` → **phần trắng trong file ảnh biến mất**, hoà vào nền giấy.
+- **Nghiệm thu:** test bằng 3 ảnh thật tạo nền trắng (chữ SHEEP, nhện, rừng có vach trắng):
+  mặt trước ✓ (ảnh trong khung kem, chữ trên nền vàng), thẻ đã lật ✓ (ô kem, chip điểm kem),
+  hộp phóng to ✓ (nền kem + viền vàng phát sáng); 0 lỗi JS, `node --check` sạch, **0 thanh cuộn**.
 
 ## B. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
 

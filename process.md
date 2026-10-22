@@ -228,6 +228,32 @@
 - 0 lỗi JavaScript khi tải + khi chơi; `node --check` 2 file sạch; cache-buster `?v=11`.
 - **Bẫy test (ghi vào `bug.md` #3):** đổi số thẻ rồi đo ngay → Tailwind CDN chưa sinh class → bị đo nhầm.
 
+## Giai đoạn 15: Task 9 — UI thẻ: bỏ nền trắng, thay nền "giấy ấm" (2026-10-22)
+
+> Thầy gửi ảnh thẻ có ô trắng → em phát hiện **20 chỗ** trong `js/game.js` dùng `bg-white`/`bg-slate-100`
+> cho nội dung thẻ.
+
+### Chỗ sửa
+- **Mặt TRƯỚC:** pill chữ (`hasImg && hasWord`) + khung ảnh `renderFrontImages` → `.card-paper` / `.card-frame`.
+- **Mặt SAU (đã lật):** cả 4 chế độ `points / image_only / text_only / full` + chip điểm góc phải
+  → `.card-paper` / `.card-paper-alt` / `.card-chip`.
+- **Hộp phóng to (zoom modal):** `bg-slate-100/200` → `.card-paper`.
+- **CSS mới (`style.css` cuối file):** nền gradient kem `#fffdf6 → #faf0d9`, viền nâu `rgba(161,98,7,.28)`,
+  bóng trong, `isolation: isolate`; `.card-chip` nền kem 95% + viền nâu.
+
+### Mẹo trị "ảnh có nền trắng sẵn"
+`.card-frame img / .card-paper img { mix-blend-mode: multiply; }` → pixel trắng trong file ảnh
+**chuyển thành màu nền giấy** (vì trắng × kem = kem), còn nét đen/màu sẫm giữ nguyên.
+Không cần sửa file ảnh, không cần tool.
+
+### Nghiệm thu thật
+- Tạo 3 ảnh test NỀN TRẮNG bằng canvas: chữ SHEEP, con nhện, hàng rào có vach trắng trên/dưới.
+- Mặt trước: ảnh nằm gọn trong khung kem bo góc, chữ trắng trên nền vàng — **không còn ô trắng** ✓
+- Thẻ đã lật (4 thẻ): ô nội dung màu kem, chip điểm kem, viền xanh/đỏ theo kết quả ✓
+- Hộp phóng to: nền kem + chữ đen đậm, viền vàng phát sáng ✓
+- 0 lỗi JS, `node --check` SYNTAX_OK, **0 thanh cuộn** (12 thẻ, đồng hồ đang chạy), cache-buster `?v=13`.
+
+
 ## Giai đoạn 14: LÔ 2 → LÔ 4 — Task 3–8 làm liền 1 lượt (2026-10-22)
 
 > Thầy duyệt: **"approve all — làm hết tất cả các bước, không cần chờ 2 task"** → bỏ chia lô,

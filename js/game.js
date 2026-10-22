@@ -464,7 +464,7 @@
                 let src = imagesPool[id] ? imagesPool[id] : `./Front-side/${id}.png`;
                 let onErrorAttr = imagesPool[id] ? `onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"` : `onerror="if(this.src.endsWith('.png')){this.src='./Front-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Front-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}"`;
                 return `
-                <div class="relative w-full h-full flex items-center justify-center p-1">
+                <div class="relative w-full h-full card-frame flex items-center justify-center p-1">
                     <img src="${src}" class="w-full h-full object-contain drop-shadow-md z-10" alt="img" 
                          ${onErrorAttr}>
                     <div class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 text-slate-400 text-[9px] text-center font-bold z-0 bg-slate-50 rounded"><span>Missing<br>${id}</span></div>
@@ -484,7 +484,7 @@
                 let src = imagesPool[id] ? imagesPool[id] : `./Back-side/${id}.png`;
                 let onErrorAttr = imagesPool[id] ? `onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';"` : `onerror="if(this.src.endsWith('.png')){this.src='./Back-side/${id}.jpg';}else if(this.src.endsWith('.jpg')){this.src='./Back-side/${id}.jpeg';}else{this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';}"`;
                 return `
-                <div class="relative w-full h-full flex items-center justify-center">
+                <div class="relative w-full h-full card-frame flex items-center justify-center">
                     <img src="${src}" class="max-w-full max-h-full object-contain opacity-95 z-10 drop-shadow-sm" alt="img" 
                          ${onErrorAttr}>
                     <div class="hidden flex-col items-center justify-center h-full text-slate-400 w-full absolute inset-0 bg-slate-100 z-0 rounded"><span class="text-xl mb-1">🖼️</span><span class="text-[8px] font-bold">${id}</span></div>
@@ -1321,7 +1321,7 @@
                             <div class="flex-1 flex items-center justify-center w-full relative overflow-hidden z-10">
                                 ${renderFrontImages(frontItem.idStr)}
                             </div>
-                            <div class="w-[98%] bg-white rounded border border-slate-200 flex items-center justify-center py-0.5 sm:py-1 shadow-sm overflow-hidden z-20" style="container-type: inline-size;">
+                            <div class="w-[98%] card-paper rounded border border-amber-900/10 flex items-center justify-center py-0.5 sm:py-1 shadow-sm overflow-hidden z-20" style="container-type: inline-size;">
                                 ${getResponsiveText(frontItem.word, true)}
                             </div>
                         </div>
@@ -1454,30 +1454,30 @@
                 contentArea.style.display = 'flex';
                 if (item.imgId && item.imgId.trim() !== "") {
                     contentArea.innerHTML = `
-                        <div class="w-full flex-1 rounded-xl overflow-hidden relative bg-slate-200 flex items-center justify-center border-2 border-slate-300">
+                        <div class="w-full flex-1 rounded-xl overflow-hidden relative card-paper flex items-center justify-center border-2 border-amber-900/15">
                             ${renderBackImages(item.imgId)}
                         </div>
-                        <div class="min-h-[25%] w-full flex items-center justify-center px-6 py-4 mt-2 bg-slate-100 rounded-xl border border-slate-200 shadow-inner"><p class="text-3xl md:text-5xl font-black text-slate-800 leading-snug text-center drop-shadow-sm">${item.text}</p></div>
+                        <div class="min-h-[25%] w-full flex items-center justify-center px-6 py-4 mt-2 card-paper rounded-xl border border-amber-900/10 shadow-inner"><p class="text-3xl md:text-5xl font-black text-slate-800 leading-snug text-center drop-shadow-sm">${item.text}</p></div>
                     `;
                 } else {
-                    contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl border border-slate-300 shadow-inner"><p class="text-5xl md:text-7xl font-black text-slate-800 text-center leading-tight drop-shadow-md">${item.text}</p></div>`;
+                    contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 card-paper rounded-xl border border-amber-900/10 shadow-inner"><p class="text-5xl md:text-7xl font-black text-slate-800 text-center leading-tight drop-shadow-md">${item.text}</p></div>`;
                 }
                 btnScoreContainer.className = "absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center";
             } else if (DISPLAY_MODE.back === 'image_only') {
                 contentArea.style.display = 'flex';
                 if (item.imgId && item.imgId.trim() !== "") {
                     contentArea.innerHTML = `
-                        <div class="w-full h-full rounded-xl overflow-hidden relative bg-slate-200 flex items-center justify-center border-2 border-slate-300 p-2">
+                        <div class="w-full h-full rounded-xl overflow-hidden relative card-paper flex items-center justify-center border-2 border-amber-900/15 p-2">
                             ${renderBackImages(item.imgId)}
                         </div>
                     `;
                 } else {
-                    contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 bg-slate-100 rounded-xl border border-slate-300 shadow-inner"><span class="text-4xl mb-2">🖼️</span><p class="text-xl font-bold text-slate-400">NO IMAGE</p></div>`;
+                    contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 card-paper rounded-xl border border-amber-900/10 shadow-inner"><span class="text-4xl mb-2">🖼️</span><p class="text-xl font-bold text-slate-400">NO IMAGE</p></div>`;
                 }
                 btnScoreContainer.className = "absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center";
             } else if (DISPLAY_MODE.back === 'text_only') {
                 contentArea.style.display = 'flex';
-                contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl border border-slate-300 shadow-inner"><p class="text-5xl md:text-7xl font-black text-slate-800 text-center leading-tight drop-shadow-md">${item.text}</p></div>`;
+                contentArea.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-8 card-paper rounded-xl border border-amber-900/10 shadow-inner"><p class="text-5xl md:text-7xl font-black text-slate-800 text-center leading-tight drop-shadow-md">${item.text}</p></div>`;
                 btnScoreContainer.className = "absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center";
             } else { 
                 contentArea.style.display = 'none';
@@ -1720,7 +1720,7 @@
             if (DISPLAY_MODE.back === 'points') {
                 innerHTMLStr = `
                     <div class="absolute inset-1 border border-slate-300 rounded pointer-events-none z-0"></div>
-                    <div class="w-full h-full flex items-center justify-center px-2 py-4 bg-white/50 rounded-lg shadow-inner z-10 relative">
+                    <div class="w-full h-full flex items-center justify-center px-2 py-4 card-paper rounded-lg shadow-inner z-10 relative">
                         <p class="text-3xl sm:text-4xl font-black ${textCol} text-center drop-shadow-sm tarot-font">${cardValueText}</p>
                     </div>
                 `;
@@ -1728,40 +1728,40 @@
                 innerHTMLStr = `
                     <div class="absolute inset-1 border border-slate-300 rounded pointer-events-none z-0"></div>
                     ${item.imgId && item.imgId.trim() !== "" ? `
-                        <div class="w-full h-full rounded-lg overflow-hidden z-10 relative bg-white flex justify-center items-center">
+                        <div class="w-full h-full rounded-lg overflow-hidden z-10 relative card-paper flex justify-center items-center">
                             ${renderBackImages(item.imgId)}
-                            <div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded shadow-md z-20 border border-slate-100"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
+                            <div class="absolute bottom-1 right-1 card-chip px-1.5 py-0.5 rounded shadow-md z-20 border border-amber-900/10"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
                         </div>
                     ` : `
-                        <div class="w-full h-full flex items-center justify-center px-2 py-4 bg-white rounded-lg shadow-inner z-10 relative">
+                        <div class="w-full h-full flex items-center justify-center px-2 py-4 card-paper rounded-lg shadow-inner z-10 relative">
                             <span class="text-[10px] font-bold text-slate-400">NO IMAGE</span>
-                            <div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded shadow-md z-20 border border-slate-100"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
+                            <div class="absolute bottom-1 right-1 card-chip px-1.5 py-0.5 rounded shadow-md z-20 border border-amber-900/10"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
                         </div>
                     `}
                 `;
             } else if (DISPLAY_MODE.back === 'text_only') {
                 innerHTMLStr = `
                     <div class="absolute inset-1 border border-slate-300 rounded pointer-events-none z-0"></div>
-                    <div class="w-full h-full flex items-center justify-center px-2 py-4 bg-white rounded-lg shadow-inner z-10 relative">
+                    <div class="w-full h-full flex items-center justify-center px-2 py-4 card-paper rounded-lg shadow-inner z-10 relative">
                         <p class="text-[9px] sm:text-[11px] font-black text-slate-800 text-center leading-tight drop-shadow-sm">${item.text}</p>
-                        <div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded shadow-md z-20 border border-slate-100"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
+                        <div class="absolute bottom-1 right-1 card-chip px-1.5 py-0.5 rounded shadow-md z-20 border border-amber-900/10"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
                     </div>
                 `;
             } else { // full
                 innerHTMLStr = `
                     <div class="absolute inset-1 border border-slate-300 rounded pointer-events-none z-0"></div>
                     ${item.imgId && item.imgId.trim() !== "" ? `
-                        <div class="w-full h-[65%] rounded-t-lg overflow-hidden z-10 relative bg-white flex justify-center items-center">
+                        <div class="w-full h-[65%] rounded-t-lg overflow-hidden z-10 relative card-paper flex justify-center items-center">
                             ${renderBackImages(item.imgId)}
-                            <div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded shadow-md z-20 border border-slate-100"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
+                            <div class="absolute bottom-1 right-1 card-chip px-1.5 py-0.5 rounded shadow-md z-20 border border-amber-900/10"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
                         </div>
-                        <div class="h-[35%] flex items-center justify-center px-1.5 bg-slate-100 rounded-b-lg border-t border-slate-200">
+                        <div class="h-[35%] flex items-center justify-center px-1.5 card-paper-alt rounded-b-lg border-t border-amber-900/10">
                             <p class="text-[8px] sm:text-[9px] font-bold text-slate-800 leading-tight text-center drop-shadow-sm">${item.text}</p>
                         </div>
                     ` : `
-                        <div class="w-full h-full flex items-center justify-center px-2 py-4 bg-white rounded-lg shadow-inner z-10 relative">
+                        <div class="w-full h-full flex items-center justify-center px-2 py-4 card-paper rounded-lg shadow-inner z-10 relative">
                             <p class="text-xs sm:text-sm font-black text-slate-800 text-center leading-tight drop-shadow-sm">${item.text}</p>
-                            <div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded shadow-md z-20 border border-slate-100"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
+                            <div class="absolute bottom-1 right-1 card-chip px-1.5 py-0.5 rounded shadow-md z-20 border border-amber-900/10"><div class="text-[10px] font-black ${textCol} tarot-font leading-none">${cardValueText}</div></div>
                         </div>
                     `}
                 `;
