@@ -182,6 +182,11 @@
 
 
         // --- CƠ CHẾ AUTO-SAVE TRÁNH MẤT DỮ LIỆU ---
+        // Khai báo SỚM (tránh lỗi biến chưa khởi tạo khi autoSave chạy trước)
+        let soundEnabled = false;   // 🔊 hiệu ứng (SFX)
+        let bgmEnabled = false;     // 🎵 nhạc nền (Music)
+        let projectorMode = false;  // 📽️ chế độ máy chiếu
+
         function autoSave() {
             const row0 = document.querySelector(`input[data-row="0"][data-col="0"]`);
             if(!row0) return; // Chưa render bảng
@@ -205,7 +210,11 @@
                 },
                 globalTime: parseInt(document.getElementById('setting-global-time').value),
                 timerEnabled: document.getElementById('setting-timer-enabled').value === 'on',
-                scoreSettings: SCORE_SETTINGS
+                scoreSettings: SCORE_SETTINGS,
+                // Task 4 & 7: âm thanh tách riêng + chế độ máy chiếu
+                sfxEnabled: soundEnabled,
+                bgmEnabled: bgmEnabled,
+                projectorMode: projectorMode
             };
 
             let STORAGE_KEY = window.INJECTED_GAME_STATE ? 'pokemonClashDataJSON_' + window.INJECTED_GAME_STATE.id : 'pokemonClashDataJSON_main';
@@ -214,6 +223,7 @@
             // Nhờ vậy gõ chữ trong bảng không phải serialize lại cả kho ảnh → gõ mượt.
             SafeStore.set(STORAGE_KEY, JSON.stringify(newData));
             SafeStore.set(SETTINGS_KEY, JSON.stringify(currentSettings));
+            markDataDirty(); // Task 6: nhắc thầy tải bản sao lưu sau khi có thay đổi
         }
 
         let autoSaveTimeout;
@@ -378,6 +388,10 @@
                 GLOBAL_GAME_TIME = s.globalTime || 180;
                 GLOBAL_TIMER_ENABLED = s.timerEnabled !== false;
                 if(s.scoreSettings) SCORE_SETTINGS = s.scoreSettings;
+                // Âm thanh tách riêng + chế độ máy chiếu (Task 4 & Task 7)
+                if (s.sfxEnabled !== undefined) soundEnabled = !!s.sfxEnabled;
+                if (s.bgmEnabled !== undefined) bgmEnabled = !!s.bgmEnabled;
+                if (s.projectorMode !== undefined) setProjectorMode(!!s.projectorMode, true);
             } else if (window.INJECTED_GAME_STATE) {
                 CARDS_PER_TEAM = window.INJECTED_GAME_STATE.settings.cardsCount;
                 DISPLAY_MODE.front = window.INJECTED_GAME_STATE.settings.frontMode;
@@ -498,9 +512,7 @@
             }
         }
 
-        document.getElementById('btn-settings').addEventListener('click', () => {
-            document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('settings-modal').classList.add('flex');
-        });
+        document.getElementById('btn-settings').addEventListener('click', () => openSettingsModal(false));
         document.getElementById('btn-close-settings').addEventListener('click', () => {
             document.getElementById('settings-modal').classList.add('hidden'); document.getElementById('settings-modal').classList.remove('flex');
         });
@@ -608,10 +620,8 @@
             loadData(); initGame();
         });
 
-        document.getElementById('btn-score-settings').addEventListener('click', () => {
-            document.getElementById('score-settings-modal').classList.remove('hidden');
-            document.getElementById('score-settings-modal').classList.add('flex');
-            
+        // Bảng cài đặt phẳng (Task 4): mở Settings modal + nhảy tới phần điểm/âm thanh
+        function refreshScoreSettingValues() {
             document.getElementById('val-posMin').innerText = SCORE_SETTINGS.posMin;
             document.getElementById('val-posMax').innerText = SCORE_SETTINGS.posMax;
             document.getElementById('val-negMin').innerText = '-' + SCORE_SETTINGS.negMin;
@@ -622,12 +632,18 @@
             SCORE_SETTINGS.evoLv3 = th.lv3;
             document.getElementById('val-evoLv2').innerText = th.lv2;
             document.getElementById('val-evoLv3').innerText = th.lv3;
-        });
-        document.getElementById('btn-close-score-settings').addEventListener('click', () => {
-            document.getElementById('score-settings-modal').classList.add('hidden');
-            document.getElementById('score-settings-modal').classList.remove('flex');
-            autoSave();
-        });
+        }
+        function openSettingsModal(scrollToScore) {
+            const sm = document.getElementById('settings-modal');
+            sm.classList.remove('hidden'); sm.classList.add('flex');
+            refreshScoreSettingValues();
+            syncSettingsToggles();
+            if (scrollToScore) {
+                const sec = document.getElementById('score-settings-section');
+                if (sec) setTimeout(() => sec.scrollIntoView({ block: 'center' }), 50);
+            }
+        }
+        document.getElementById('btn-score-settings').addEventListener('click', () => openSettingsModal(true));
         
         window.updateScoreSetting = function(key, delta) {
             // Chuẩn hoá ngưỡng tiến hoá (cài đặt lưu từ bản cũ chưa có 2 trường này)
@@ -737,8 +753,8 @@
         });
 
         let teams = {
-            team1: { score: 0, flipped: 0, hasShield: false, specialMap: {}, board: document.getElementById('board-team1'), scoreEl: document.getElementById('team1-score'), flippedEl: document.getElementById('team1-flipped'), config: POKEMON_TEAMS[0] },
-            team2: { score: 0, flipped: 0, hasShield: false, specialMap: {}, board: document.getElementById('board-team2'), scoreEl: document.getElementById('team2-score'), flippedEl: document.getElementById('team2-flipped'), config: POKEMON_TEAMS[1] }
+            team1: { score: 0, flipped: 0, hasShield: false, specialMap: {}, stats: { correct: 0, wrong: 0, special: 0, skip: 0 }, board: document.getElementById('board-team1'), scoreEl: document.getElementById('team1-score'), flippedEl: document.getElementById('team1-flipped'), config: POKEMON_TEAMS[0] },
+            team2: { score: 0, flipped: 0, hasShield: false, specialMap: {}, stats: { correct: 0, wrong: 0, special: 0, skip: 0 }, board: document.getElementById('board-team2'), scoreEl: document.getElementById('team2-score'), flippedEl: document.getElementById('team2-flipped'), config: POKEMON_TEAMS[1] }
         };
 
         let currentActiveCard = null;
@@ -751,8 +767,7 @@
         const btnSkip = document.getElementById('btn-skip');
 
         let audioCtx; 
-        let soundEnabled = false; 
-        let isMusicPlaying = false;
+        let isMusicPlaying = false; 
         let nextNoteTime = 0; 
         let currentNoteIndex = 0; 
         let musicTimerId;
@@ -904,20 +919,151 @@
             }
         }
 
-        document.getElementById('btn-sound').addEventListener('click', (e) => { 
-            soundEnabled = !soundEnabled; 
-            if (soundEnabled) { 
-                e.target.innerText = '🔊'; 
-                e.target.classList.remove('animate-pulse'); 
-                currentTrackIndex = (currentTrackIndex + 1) % MELODIES.length; 
-                currentNoteIndex = 0; 
-                initAudio(); 
-                startMusic(); 
-            } else { 
-                e.target.innerText = '🔇'; 
-                stopMusic(); 
-            } 
+        // ================== THANH ĐIỀU KHIỂN (Task 3/4/5/6/7) ==================
+        // 🔊 SFX và 🎵 nhạc nền là 2 công tắc RIÊNG (Task 4), nhớ trạng thái qua autoSave.
+        function updateSoundIcons() {
+            const bS = document.getElementById('btn-sound');
+            const bM = document.getElementById('btn-music');
+            if (bS) {
+                bS.innerText = soundEnabled ? '🔊' : '🔇';
+                bS.classList.toggle('toggled-on', soundEnabled);
+                bS.classList.toggle('toggled-off', !soundEnabled);
+                bS.title = 'Hiệu ứng âm thanh (SFX): ' + (soundEnabled ? 'BẬT' : 'TẮT');
+            }
+            if (bM) {
+                bM.innerText = '🎵';
+                bM.classList.toggle('toggled-on', bgmEnabled);
+                bM.classList.toggle('toggled-off', !bgmEnabled);
+                bM.title = 'Nhạc nền (Music): ' + (bgmEnabled ? 'BẬT' : 'TẮT');
+            }
+            const cbS = document.getElementById('setting-sfx');
+            const cbM = document.getElementById('setting-bgm');
+            if (cbS) cbS.checked = soundEnabled;
+            if (cbM) cbM.checked = bgmEnabled;
+        }
+
+        document.getElementById('btn-sound').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) initAudio();
+            updateSoundIcons();
+            autoSave();
         });
+
+        document.getElementById('btn-music').addEventListener('click', () => {
+            bgmEnabled = !bgmEnabled;
+            if (bgmEnabled) {
+                initAudio();
+                currentTrackIndex = (currentTrackIndex + 1) % MELODIES.length; // mỗi lần bật là 1 bài mới
+                currentNoteIndex = 0;
+                startMusic();
+            } else {
+                stopMusic();
+            }
+            updateSoundIcons();
+            autoSave();
+        });
+
+        // 3 công tắc trong bảng Cài đặt phẳng (Task 4 & Task 7)
+        function syncSettingsToggles() {
+            const a = document.getElementById('setting-sfx'); if (a) a.checked = soundEnabled;
+            const b = document.getElementById('setting-bgm'); if (b) b.checked = bgmEnabled;
+            const c = document.getElementById('setting-projector'); if (c) c.checked = projectorMode;
+        }
+        [['setting-sfx'], ['setting-bgm'], ['setting-projector']].forEach(([id]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('change', () => {
+                if (id === 'setting-sfx') soundEnabled = el.checked;
+                if (id === 'setting-bgm') {
+                    bgmEnabled = el.checked;
+                    if (bgmEnabled) { initAudio(); startMusic(); } else stopMusic();
+                }
+                if (id === 'setting-projector') setProjectorMode(el.checked);
+                updateSoundIcons();
+                autoSave();
+            });
+        });
+
+        // 📽️ CHẾ ĐỘ MÁY CHIẾU (Task 7) — phóng to số/chữ cho học sinh nhìn từ xa
+        function setProjectorMode(on, silent) {
+            projectorMode = !!on;
+            document.body.classList.toggle('projector-mode', projectorMode);
+            const b = document.getElementById('btn-projector');
+            if (b) {
+                b.classList.toggle('toggled-on', projectorMode);
+                b.classList.toggle('toggled-off', !projectorMode);
+                b.title = 'Chế độ máy chiếu: ' + (projectorMode ? 'BẬT (số/chữ to)' : 'TẮT');
+            }
+            const cb = document.getElementById('setting-projector');
+            if (cb) cb.checked = projectorMode;
+            if (!silent) autoSave();
+        }
+        document.getElementById('btn-projector').addEventListener('click', () => setProjectorMode(!projectorMode));
+
+        // ================== NHẬT KÝ ĐIỂM + HOÀN TÁC (Task 5) ==================
+        let scoreHistory = []; // {time, teamId, label, before:{t1,t2}, after:{t1,t2}}
+        const escHtml = (s) => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const nowTime = () => new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const scoreSnapshot = () => ({ t1: teams.team1.score, t2: teams.team2.score });
+
+        function pushHistory(entry) {
+            scoreHistory.push(entry);
+            if (scoreHistory.length > 40) scoreHistory.shift();
+            renderHistory();
+        }
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if (!list) return;
+            if (!scoreHistory.length) {
+                list.innerHTML = '<p class="text-slate-400 text-center py-4">Chưa có lần cộng điểm nào trong ván này.</p>';
+                return;
+            }
+            list.innerHTML = scoreHistory.slice().reverse().map(h => `
+                <div class="hist-item">
+                    <span class="hist-time">${h.time}</span>
+                    <span class="hist-team">${escHtml(teams[h.teamId].config.name)}</span>
+                    <span class="hist-label">${escHtml(h.label)}</span>
+                    <span class="hist-score">${h.after.t1} – ${h.after.t2}</span>
+                </div>`).join('');
+        }
+        function undoLastScore() {
+            if (!scoreHistory.length) { alert('Chưa có gì để hoàn tác.'); return; }
+            const h = scoreHistory.pop();
+            teams.team1.score = h.before.t1;
+            teams.team2.score = h.before.t2;
+            teams.team1.scoreEl.innerText = teams.team1.score;
+            teams.team2.scoreEl.innerText = teams.team2.score;
+            updateEvolution('team1');
+            updateEvolution('team2');
+            renderHistory();
+        }
+        document.getElementById('btn-history').addEventListener('click', () => {
+            renderHistory();
+            const m = document.getElementById('history-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        });
+        document.getElementById('btn-close-history').addEventListener('click', () => {
+            const m = document.getElementById('history-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-undo').addEventListener('click', undoLastScore);
+        document.getElementById('btn-clear-history').addEventListener('click', () => {
+            scoreHistory = []; renderHistory();
+        });
+
+        // ================== NHẮC SAO LƯU (Task 6) ==================
+        let dataDirty = false;
+        let lastBackupAt = 0;
+        function updateBackupWarning() {
+            const el = document.getElementById('backup-warning');
+            if (!el) return;
+            const shouldShow = dataDirty && (Date.now() - lastBackupAt > 5 * 60 * 1000);
+            el.classList.toggle('hidden', !shouldShow);
+        }
+        function markDataDirty() { dataDirty = true; updateBackupWarning(); }
+        setInterval(updateBackupWarning, 60000); // kiểm tra mỗi phút
+
+        updateSoundIcons();
 
         // ==== ẢNH AVATAR ARTWORK + TIẾN HOÁ POKÉMON (Lô 1 - Task 1 & 2) ====
         const ARTWORK_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
@@ -1547,6 +1693,7 @@
             if (!currentActiveCard || isProcessingModal) return;
             isProcessingModal = true;
             clearInterval(bombInterval);
+            const _snapBefore = scoreSnapshot(); // Task 5: lưu điểm trước khi thay đổi để hoàn tác
 
             const { teamId, item, cardData, cardElement, revealedElement } = currentActiveCard;
             const isSpecial = cardData.type === 'special';
@@ -1628,10 +1775,13 @@
                 const result = executeSpecialCardLogic(teamId, cardData.config.id);
                 floatText = result.floatText;
                 isGoodOutcome = result.isSuccessful; 
+                teams[teamId].stats.special++;      // Task 8: thống kê lá bài đặc biệt
             } else {
                 teams[teamId].score += cardData.value;
                 floatText = `${cardData.value > 0 ? '+' : ''}${cardData.value}`;
                 isGoodOutcome = cardData.value > 0;
+                if (cardData.value > 0) teams[teamId].stats.correct++;   // Task 8: đúng (+ điểm)
+                else teams[teamId].stats.wrong++;                        // Task 8: sai (− điểm / bom)
             }
 
             teams[teamId].flipped++; 
@@ -1648,6 +1798,15 @@
             // Tiến hoá Pokémon theo điểm (Lô 1 - Task 2)
             updateEvolution('team1');
             updateEvolution('team2');
+
+            // Task 5: ghi nhật ký (kèm ảnh chụp điểm trước đó để hoàn tác)
+            pushHistory({
+                time: nowTime(),
+                teamId: teamId,
+                label: isSpecial ? `🌟 ${cardData.config.name} → ${floatText}` : `Thẻ ${floatText}`,
+                before: _snapBefore,
+                after: scoreSnapshot()
+            });
 
             if(isGoodOutcome) {
                 playSoundEffect('match'); 
@@ -1789,8 +1948,9 @@
             teams[teamId].flippedEl.innerText = teams[teamId].flipped; 
             cardElement.classList.add('flipped'); 
             cardElement.style.order = "1"; 
+            teams[teamId].stats.skip++;   // Task 8: thống kê số lần SKIP
             closeZoomModal(); 
-            checkEndGame();
+            checkEndGame(); 
         }
 
         function showFloatingPoint(cardElement, text, isSpecial = false) {
@@ -1925,6 +2085,7 @@
 
             statusEl.innerHTML = `<span class="text-yellow-400 font-bold text-xl md:text-3xl uppercase drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">${winText}</span>`; 
             statusEl.style.display = 'block';
+            statusEl.classList.add('status-overlay');   // phủ lên trên → không đẩy tràn thanh cuộn
             statusEl.classList.remove('animate-pulse'); 
             statusEl.classList.add('animate-bounce');
             
@@ -1947,6 +2108,9 @@
                     document.getElementById(`${t}-fireworks`).classList.add('fireworks-active');
                 });
             }
+
+            // Task 8: hiện bảng KẾT THÚC 3 cột (avatar | thống kê | tổng điểm) + bảng xếp hạng
+            setTimeout(() => openResultModal(winnerTeam, isTimeout), 1400);
         }
 
         function initGame() {
@@ -1957,9 +2121,12 @@
             document.querySelectorAll('.confetti-piece').forEach(e => e.remove());
             
             playSoundEffect('flip'); 
-            if (soundEnabled) startMusic();
+            if (bgmEnabled) startMusic();   // Task 4: nhạc nền là công tắc riêng
             teams.team1.score = 0; teams.team1.flipped = 0; teams.team1.hasShield = false;
             teams.team2.score = 0; teams.team2.flipped = 0; teams.team2.hasShield = false;
+            // Task 5 & 8: ván mới → xóa nhật ký điểm, reset thống kê
+            scoreHistory = []; renderHistory();
+            ['team1', 'team2'].forEach(t => { teams[t].stats = { correct: 0, wrong: 0, special: 0, skip: 0 }; });
             teams.team1.scoreEl.innerText = '0'; teams.team1.flippedEl.innerText = '0'; teams.team2.scoreEl.innerText = '0'; teams.team2.flippedEl.innerText = '0';
             
             ['team1', 'team2'].forEach(t => {
@@ -1974,6 +2141,7 @@
             });
 
             statusEl.style.display = 'none';
+            statusEl.classList.remove('status-overlay');
             statusEl.innerText = "";
             
             document.getElementById('game-timer-container').classList.add('hidden');
@@ -2209,8 +2377,7 @@
 
         function backupDataKey(k) { return window.INJECTED_GAME_STATE ? k + '_' + window.INJECTED_GAME_STATE.id : k + '_main'; }
 
-        if (btnBackup) {
-            btnBackup.addEventListener('click', async () => {
+        async function runBackup() {
                 // Đọc trực tiếp từ bảng + ô cài đặt (đúng trạng thái hiện tại em đang thấy)
                 const rows = [];
                 const row0 = document.querySelector('input[data-row="0"][data-col="0"]');
@@ -2236,7 +2403,11 @@
                     },
                     globalTime: parseInt((document.getElementById('setting-global-time') || {}).value) || GLOBAL_TIME.totalSeconds,
                     timerEnabled: ((document.getElementById('setting-timer-enabled') || {}).value) === 'on',
-                    scoreSettings: SCORE_SETTINGS
+                    scoreSettings: SCORE_SETTINGS,
+                    // Task 4 & 7: mang theo âm thanh + chế độ máy chiếu
+                    sfxEnabled: soundEnabled,
+                    bgmEnabled: bgmEnabled,
+                    projectorMode: projectorMode
                 };
                 const payload = {
                     app: 'pokemon-card-clash',
@@ -2246,7 +2417,9 @@
                     settings: settings,
                     // Bước 5: sao lưu TOÀN BỘ album (nhiều chủ đề), không chỉ album đang mở
                     albums: albums,
-                    currentAlbum: currentAlbumName
+                    currentAlbum: currentAlbumName,
+                    // Task 8: bảng xếp hạng cũng nằm trong file sao lưu
+                    ranking: getRanking()
                 };
                 const nAlbums = Object.keys(albums).length;
                 const nImg = Object.values(albums).reduce((s, a) => s + Object.keys(a || {}).length, 0);
@@ -2260,8 +2433,106 @@
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(a.href), 5000);
                 alert(`✅ Đã tải bản sao lưu!\n\n• ${rows.filter(r => r.fId || r.fWord || r.bImgId || r.bText).length} dòng bài học\n• ${nAlbums} chủ đề, tổng ${nImg} ảnh\n• Kích thước file: ${sizeMB}MB\n\nHãy giữ file này ở chỗ an toàn (USB, Google Drive...). Khi máy bị dọn hoặc sang máy khác, bấm "📂 Khôi phục từ file" và chọn file này là mọi thứ trở lại.`);
-            });
+            lastBackupAt = Date.now();   // Task 6: vừa tải bản sao → tắt lời nhắc
+            dataDirty = false;
+            updateBackupWarning();
         }
+        if (btnBackup) btnBackup.addEventListener('click', runBackup);
+        const btnBackupQuick = document.getElementById('btn-backup-quick');
+        if (btnBackupQuick) btnBackupQuick.addEventListener('click', runBackup);
+        const backupWarningEl = document.getElementById('backup-warning');
+        if (backupWarningEl) backupWarningEl.addEventListener('click', runBackup);
+
+        // ================== BẢNG XẾP HẠNG (Task 8) ==================
+        function getRanking() {
+            try { const v = JSON.parse(SafeStore.get(backupDataKey('pokemonClashRanking')) || '[]'); return Array.isArray(v) ? v : []; }
+            catch (e) { return []; }
+        }
+        function renderRanking() {
+            const tb = document.getElementById('ranking-table');
+            if (!tb) return;
+            const rows = getRanking().slice().sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 20);
+            if (!rows.length) {
+                tb.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-slate-400">Chưa có kết quả nào được lưu.</td></tr>';
+                return;
+            }
+            tb.innerHTML = rows.map((r, i) => `
+                <tr class="border-b border-slate-800">
+                    <td class="py-1.5">${i + 1}</td>
+                    <td class="py-1.5">${escHtml(r.name || 'Không tên')}${r.t1 ? `<span class="text-slate-500 text-xs"> (${escHtml(r.t1)} ${r.s1 ?? 0} – ${escHtml(r.t2)} ${r.s2 ?? 0})</span>` : ''}</td>
+                    <td class="py-1.5 text-right text-yellow-300 font-black">${r.score || 0}</td>
+                    <td class="py-1.5 text-right text-slate-400 text-xs">${escHtml(r.date || '')}</td>
+                </tr>`).join('');
+        }
+        const btnSaveRanking = document.getElementById('btn-save-ranking');
+        if (btnSaveRanking) btnSaveRanking.addEventListener('click', () => {
+            const nameEl = document.getElementById('ranking-name');
+            const name = (nameEl.value || '').trim() || teams.team1.config.name;
+            const best = Math.max(teams.team1.score, teams.team2.score);
+            const list = getRanking();
+            list.push({
+                name: name, score: best,
+                t1: teams.team1.config.name, s1: teams.team1.score,
+                t2: teams.team2.config.name, s2: teams.team2.score,
+                date: new Date().toLocaleDateString('vi-VN')
+            });
+            SafeStore.set(backupDataKey('pokemonClashRanking'), JSON.stringify(list));
+            markDataDirty();      // có dữ liệu mới → nhắc tải bản sao
+            renderRanking();
+            alert(`✅ Đã lưu điểm "${name}" = ${best} vào bảng xếp hạng!\n\nBấm nút 💾 ở thanh công cụ để tải bản sao lưu (trong đó có cả bảng xếp hạng).`);
+        });
+
+        // ================== MÀN HÌNH KẾT THÚC 3 CỘT (Task 8) ==================
+        function openResultModal(winnerTeam, isTimeout) {
+            const t1 = teams.team1, t2 = teams.team2;
+            const avTeam = winnerTeam || 'team1';
+            const titleEl = document.getElementById('result-title');
+            titleEl.textContent = (isTimeout ? "⏰ TIME'S UP! — " : '') +
+                (winnerTeam ? `${teams[winnerTeam].config.name} WINS! 🏆` : "🤝 IT'S A DRAW!");
+
+            // Cột 1: avatar đội thắng (hoại đội 1 nếu hòa)
+            const av = document.getElementById('result-avatar');
+            av.src = document.getElementById(`${avTeam}-avatar`).src;
+            document.getElementById('result-team-name').textContent = winnerTeam ? teams[avTeam].config.name : `${t1.config.name} vs ${t2.config.name}`;
+            document.getElementById('result-lv').textContent = winnerTeam
+                ? `LV.${teams[avTeam].evoStage || 1} — đã tiến hoá trong ván này`
+                : 'Hòa điểm — không đội nào thắng';
+
+            // Cột 2: thống kê
+            document.getElementById('result-h1').textContent = t1.config.name;
+            document.getElementById('result-h2').textContent = t2.config.name;
+            ['correct', 'wrong', 'special', 'skip'].forEach(k => {
+                document.getElementById(`stat-${k}-1`).textContent = t1.stats[k];
+                document.getElementById(`stat-${k}-2`).textContent = t2.stats[k];
+            });
+
+            // Cột 3: tổng điểm (đội thắng viền vàng)
+            document.getElementById('result-sn1').textContent = t1.config.name;
+            document.getElementById('result-sn2').textContent = t2.config.name;
+            document.getElementById('result-score-1').textContent = t1.score;
+            document.getElementById('result-score-2').textContent = t2.score;
+            const box1 = document.getElementById('result-score-box-1'), box2 = document.getElementById('result-score-box-2');
+            [box1, box2].forEach(b => { b.classList.remove('border-yellow-400', 'result-winner'); b.classList.add('border-slate-600'); });
+            const winBox = winnerTeam === 'team1' ? box1 : winnerTeam === 'team2' ? box2 : null;
+            if (winBox) { winBox.classList.remove('border-slate-600'); winBox.classList.add('border-yellow-400', 'result-winner'); }
+
+            document.getElementById('ranking-name').value = winnerTeam ? teams[avTeam].config.name : '';
+            renderRanking();
+            const rm = document.getElementById('result-modal');
+            rm.classList.remove('hidden'); rm.classList.add('flex');
+        }
+        const btnResultClose = document.getElementById('result-close');
+        if (btnResultClose) btnResultClose.addEventListener('click', () => {
+            const rm = document.getElementById('result-modal');
+            rm.classList.add('hidden'); rm.classList.remove('flex');
+        });
+        const btnResultRestart = document.getElementById('result-restart');
+        if (btnResultRestart) btnResultRestart.addEventListener('click', () => {
+            const rm = document.getElementById('result-modal');
+            rm.classList.add('hidden'); rm.classList.remove('flex');
+            initGame();
+        });
+
 
         if (btnRestore && restoreFileInput) {
             btnRestore.addEventListener('click', () => restoreFileInput.click());
@@ -2284,6 +2555,7 @@
                 // 1) Bảng + cài đặt
                 SafeStore.set(backupDataKey('pokemonClashDataJSON'), JSON.stringify(payload.dataJSON));
                 if (payload.settings) SafeStore.set(backupDataKey('pokemonClashSettings'), JSON.stringify(payload.settings));
+                if (Array.isArray(payload.ranking)) SafeStore.set(backupDataKey('pokemonClashRanking'), JSON.stringify(payload.ranking)); // Task 8
                 // 2) Album + kho ảnh → IndexedDB (trượt thì về localStorage)
                 albums = restoredAlbums.albums;
                 currentAlbumName = restoredAlbums.current;

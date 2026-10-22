@@ -9,7 +9,7 @@
 > - Sau mọi lần sửa code: bump `?v=N` trong `index.html` (3 chỗ) rồi mới push.
 > - Thông báo/alert tiếng Việt, giao diện tiếng Anh.
 
-**Cập nhật lần cuối:** 2026-10-22 — **LÔ 1 ĐÃ XONG & PUSH** (xem mục Kết quả nghiệm thu bên dưới)
+**Cập nhật lần cuối:** 2026-10-22 — **PHASE 1 ĐẦY ĐỦ (Task 1→8) ĐÃ XONG & PUSH** (thầy duyệt 'làm hết mọi bước, không chờ lô')
 
 ---
 
@@ -21,14 +21,17 @@
 |---|---|---|---|
 | **Lô 1** | Task 1 | Avatar Pokémon artwork to rõ (thay sprite nhỏ) | ✅ Xong 2026-10-22 |
 | **Lô 1** | Task 2 | Tiến hoá Pokémon theo nấc điểm | ✅ Xong 2026-10-22 |
-| **Lô 2** | Task 3 | Gom toàn bộ nút điều khiển vào 1 thanh công cụ | ⬜ Chưa làm |
-| **Lô 2** | Task 4 | Cài đặt gộp 1 bảng phẳng + tách công tắc âm thanh | ⬜ Chưa làm |
-| **Lô 3** | Task 5 | Nhật ký điểm + nút ↶ Hoàn tác | ⬜ Chưa làm |
-| **Lô 3** | Task 6 | Nhắc sao lưu (chưa tải bản sao) | ⬜ Chưa làm |
-| **Lô 4** | Task 7 | Chế độ Máy chiếu (phóng to số/chữ) | ⬜ Chưa làm |
-| **Lô 4** | Task 8 | Màn hình Kết thúc 3 cột + Bảng xếp hạng | ⬜ Chưa làm |
+| **Lô 2** | Task 3 | Gom toàn bộ nút điều khiển vào 1 thanh công cụ | ✅ Xong 2026-10-22 |
+| **Lô 2** | Task 4 | Cài đặt gộp 1 bảng phẳng + tách công tắc âm thanh | ✅ Xong 2026-10-22 |
+| **Lô 3** | Task 5 | Nhật ký điểm + nút ↶ Hoàn tác | ✅ Xong 2026-10-22 |
+| **Lô 3** | Task 6 | Nhắc sao lưu (chưa tải bản sao) | ✅ Xong 2026-10-22 |
+| **Lô 4** | Task 7 | Chế độ Máy chiếu (phóng to số/chữ) | ✅ Xong 2026-10-22 |
+| **Lô 4** | Task 8 | Màn hình Kết thúc 3 cột + Bảng xếp hạng | ✅ Xong 2026-10-22 |
 
 > Ký hiệu: ⬜ chưa làm · 🔨 đang làm · ✅ xong + đã push · ⚠️ xong nhưng còn lỗi (xem bug.md)
+>
+> **Ngoại lệ 2026-10-22:** thầy nhắn *"approve all — làm hết tất cả các bước, không cần chờ 2 task"*
+> nên Lô 2→3→4 (Task 3–8) được làm liên tục trong 1 lần, gộp chung 1 lần push.
 
 ---
 
@@ -153,6 +156,40 @@ dạng `TEAM_EVOLUTIONS` rồi gán thẳng vào `POKEMON_TEAMS[i].evos` — đ�
 
 **Chiều cao bị bù trừ** (để avatar to mà màn hình vẫn vừa): gọn lề bảng thẻ (`pt-8→pt-4`), lề chân trang,
 nút RESTART (`py-3→py-1.5`), padding header/panel, và sàn chiều cao thẻ `105px→92px`.
+
+### 📸 KẾT QUẢ NGHIỆM THU LÔ 2 → LÔ 4 (2026-10-22) — ĐÃ PUSH
+
+> Thầy duyệt **"làm hết mọi bước"** → Task 3–8 làm liên tục, gộp 1 lần push (`?v=12`).
+
+**Nghiệm thu thật (trình duyệt thật, 1280×633 / 1366×768, phiên trình duyệt riêng):**
+
+- ✅ **Task 3 — Thanh công cụ 1 chỗ duy nhất:** nút RESTART to ở giữa + cụm nút 2 góc bị gỡ hết,
+  gom vào `#game-toolbar` cố định dưới cùng: `⚙️ 📐 🎯 🔊 🎵 📜 📽️ 💾` + `🔄` + `🏁`.
+  Đồng hồ đếm ngược cũng chuyển vào đây (xem lỗi #5 trong bug.md — đây là lỗi **có sẵn từ trước**).
+  Bật/tắt SFX 🎵📻, Poke Ball 🎯, Lưu/Xóa ảnh → đều bấm được, giữ nguyên id cũ.
+- ✅ **Task 4 — Bảng cài đặt phẳng:** hộp Snorlax (Score Range) riêng bị xoá, gộp thành bảng
+  📊 ĐIỂM SỐ / TIẾN HOÁ / ÂM THANH ngay trong Settings → thấy hết mọi ô 1 lúc;
+  tách **2 công tắc 🔊 hiệu ứng** và **🎵 nhạc nền** + **💻 máy chiếu**, nhớ trạng thái sau khi tải lại;
+  hộp Settings **không tự mở nữa khi vào trang** (bản trước mở sẵn, che bàn chơi).
+- ✅ **Task 5 — Nhật ký điểm:** mọi lần đổi điểm được ghi (giờ · đội · lý do · tỷ số trước→sau),
+  nút `↩ HOÀN TÁC điểm gần nhất` chạy đúng (test: 20 → undo → 0), `🧹 Dọn nhật ký` có hỏi lại tiếng Việt.
+- ✅ **Task 6 — Nhắc sao lưu:** badge `⚠️ CHƯA TẢI BẢN SAO` trên thanh công cụ + banner nhỏ phía trên bàn chơi;
+  bấm là tải file JSON ngay, sau đó badge tự ẩn. Sao lưu đã **gồm bảng xếp hạng + cài đặt âm thanh/máy chiếu**.
+- ✅ **Task 7 — Chế độ Máy chiếu:** bấm `📽️` → phóng to số điểm/chữ bảng + nhãn `P1/P2` thay "Team Pikachu";
+  bật/tắt nhớ trạng thái; vẫn **0 thanh cuộn** khi bật.
+- ✅ **Task 8 — Màn hình Kết thúc:** banner `🏆 PIKACHU WINS!` + hộp 3 cột
+  (avatar HERO + LV | bảng THỐNG KÊ Correct/Wrong/Special/Skip 2 cột | TOTAL SCORE viền vàng),
+  ô nhập tên + `💾 SAVE SCORE & VIEW RANKING` + bảng xếp hạng (Tên · Điểm · Ngày) → lưu lại qua nhiều buổi.
+- ✅ **0 thanh cuộn dọc** ở mọi tình huống test: mới tải · đang lật thẻ (đồng hồ chạy) · bật máy chiếu ·
+  game kết thúc · sau RESTART. Bản trước: đồng hồ đếm ngược xuất hiện làm tràn **53px** (bug.md #5).
+- ✅ Thẻ 12 vẫn **144×124**; toolbar cao 50px, cách bảng đội ~21px (không đè);
+  `node --check` 2 file sạch; **0 lỗi JavaScript** trong toàn bộ test; `?v=12`.
+
+**Hai lỗi em tự phát hiện + sửa trong lần này (chi tiết trong `bug.md` #4, #5):**
+1. Banner kết thúc (fixed→block) đẩy bàn chơi tràn 53px → thêm lớp phủ `.status-overlay` (fixed).
+2. Đồng hồ đếm ngược hiện ra lúc chơi → tràn 53px (lỗi **có sẵn**, bản cũ cũng vậy) → chuyển đồng hồ vào thanh công cụ.
+
+---
 
 ## B. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
 

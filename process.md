@@ -227,3 +227,51 @@
 - Hộp CÀI ĐẶT ĐIỂM SỐ: mở/đóng OK, 2 ô ngưỡng tiến hoá +/- chạy đúng (150↔100↔150) ✔
 - 0 lỗi JavaScript khi tải + khi chơi; `node --check` 2 file sạch; cache-buster `?v=11`.
 - **Bẫy test (ghi vào `bug.md` #3):** đổi số thẻ rồi đo ngay → Tailwind CDN chưa sinh class → bị đo nhầm.
+
+## Giai đoạn 14: LÔ 2 → LÔ 4 — Task 3–8 làm liền 1 lượt (2026-10-22)
+
+> Thầy duyệt: **"approve all — làm hết tất cả các bước, không cần chờ 2 task"** → bỏ chia lô,
+> làm Task 3–8 liên tục rồi mới báo. Push `?v=12`.
+
+### Task 3 — Gom nút vào 1 thanh công cụ
+- Gỡ hàng `RESTART GAME` to ở giữa + cụm nút góc dưới trái + nút Mimikyu góc phải.
+- Tạo `#game-toolbar` (fixed, giữa dưới, nền kính mờ): `⚙️ 📐 🎯 🔊 🎵 📜 📽️ 💾` + `🔄` + `🏁`,
+  giữ nguyên id cũ nên phần lớn logic không phải sửa; thêm ô đệm `.restart-block h-12` tránh toolbar đè bàn chơi.
+- **Đồng hồ đếm ngược cũng chuyển vào toolbar** (xem bug #5) — đây là chìa khoá để 0 tràn màn hình khi chơi.
+
+### Task 4 — Bảng cài đặt phẳng + tách âm thanh
+- Xoá hẳn modal Snorlax (`score-settings-modal`), gộp thành bảng `#score-settings-section` ngay trong Settings:
+  📊 ĐIỂM SỐ (pos/neg) · ⚡ TIẾN HOÁ (LV.2/LV.3) · 🔊🎵🔊 3 công tắc (SFX / nhạc nền / máy chiếu).
+- `openSettingsModal()` + `refreshScoreSettingValues()`; Settings **không tự mở khi vào trang**.
+- Tách `soundEnabled`(SFX) / `bgmEnabled` / `projectorMode` — khai báo sớm tránh lỗi TDZ khi `autoSave()` chạy trước.
+
+### Task 5 — Nhật ký điểm + ↶ Hoàn tác
+- `scoreHistory[]` (giờ · đội · lý do · trước→sau) + `scoreSnapshot()` chụp điểm trước mỗi lần áp;
+  `#history-modal` hiển thị ~20 dòng gần nhất, `btn-undo` chạy lại logic điểm, `btn-clear-history` hỏi lại tiếng Việt.
+- Thêm `teams[x].stats = {correct, wrong, special, skip}` (Task 8 cần dùng cho bảng thống kê).
+
+### Task 6 — Nhắc sao lưu
+- Tách `runBackup()` ra khỏi handler; badge `#backup-warning` + banner `#backup-warning` phía trên bàn chơi,
+  `lastBackupAt` + `updateBackupWarning()`; payload sao lưu thêm `ranking`, `sfxEnabled`, `bgmEnabled`, `projectorMode`.
+
+### Task 7 — Chế độ Máy chiếu
+- `setProjectorMode()` + class `body.projector-mode`: phóng to số điểm, nhãn cột `P1/P2`, tăng tương phản; nhớ trạng thái.
+
+### Task 8 — Màn hình Kết thúc 3 cột + Bảng xếp hạng
+- `getRanking()` / `renderRanking()` (Tên · Điểm · Ngày, lưu localStorage + có trong file sao lưu),
+  `openResultModal(winner, isTimeout)` mở sau `triggerWinCelebration` 1,4s; ô nhập tên + `💾 SAVE SCORE & VIEW RANKING`.
+
+### 2 lỗi em tự phát hiện khi test (đã ghi bug.md #4, #5)
+1. **Banner kết thúc tràn 53px** — `#global-status` có `position:fixed` nhưng CSS ép `display:block` → tách lớp phủ `.status-overlay`.
+2. **Đồng hồ đếm ngược tràn 53px (lỗi CÓ SẴN từ bản trước)** — `startGameGlobalTimer()` bỏ `hidden` lúc lật thẻ đầu →
+   chuyển đồng hồ vào thanh công cụ (`2.75rem`, margin 0) → không còn chiếm chiều cao.
+
+### Nghiệm thu thật (1280×633, 1366×768, 390×740 — phiên trình duyệt riêng, cache tắt)
+- 0 thanh cuộn ở mọi tình huống: mới tải · đang lật thẻ (đồng hồ chạy) · bật máy chiếu · game over · sau RESTART.
+- Toolbar cao 50px, cách bảng đội 21px; thẻ 12 = 144×124; mở Settings → bảng phẳng thấy đủ ô; hộp Settings không tự mở.
+- Nhật ký điểm ghi đúng, Undo 20→0 chạy đúng; nhắc sao lưu hiện/ẩn sau khi tải JSON;
+  máy chiếu phóng to + nhãn P1/P2; màn hình kết thúc đủ 3 cột + bảng xếp hạng lưu được.
+- `node --check` 2 file SYNTAX_OK; **0 lỗi JavaScript** toàn bộ test; `?v=12`.
+- Mobile 390×740 vẫn cuộn (bản cũ cũng cuộn ~791px, bản mới 855px với 12 thẻ) → **bản cũ cũng bị, không phải lỗi mới**;
+  máy chủ thầy dùng là laptop/máy chiếu nên 0 tràn ở 1280/1366/1920 mới là tiêu chí.
+

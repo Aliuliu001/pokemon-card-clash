@@ -280,8 +280,74 @@
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.35); }
         }
-        #game-timer-container { width: 3.5rem !important; height: 3.5rem !important; margin: 0.25rem 0 !important; }
-        #game-timer-text { font-size: 0.95rem !important; }
+
+
+        /* Banner KẾT THÚC phủ lên trên (Task 8) — không làm tràn thanh cuộn */
+        #global-status.status-overlay {
+            position: fixed; top: 6px; left: 0; right: 0;
+            text-align: center; z-index: 45; pointer-events: none; margin: 0 !important;
+        }
+
+        /* ============ THANH ĐIỀU KHIỂN DUY NHẤT (Task 3) ============ */
+        .tool-btn {
+            width: 2rem; height: 2rem; font-size: 0.95rem;
+            background-color: #1e293b; color: #fff;
+            border: 1px solid #64748b; border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+            transition: transform .15s ease, background-color .15s ease, opacity .15s ease;
+            flex-shrink: 0; line-height: 1; cursor: pointer;
+        }
+        .tool-btn:hover { background-color: #334155; transform: scale(1.12); }
+        .tool-btn:active { transform: scale(.93); }
+        @media (min-width: 768px) { .tool-btn { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; } }
+        #game-toolbar { scrollbar-width: none; }
+        #game-toolbar::-webkit-scrollbar { display: none; }
+        .tool-btn.toggled-on { background-color: #14532d !important; border-color: #22c55e !important; box-shadow: 0 0 10px rgba(34, 197, 94, .65); }
+        .tool-btn.toggled-off { opacity: .5; }
+
+        /* ============ NHẬT KÝ ĐIỂM (Task 5) ============ */
+        .hist-item {
+            display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+            background: rgba(30, 41, 59, .75); border: 1px solid #475569;
+            border-radius: .6rem; padding: .4rem .6rem; font-weight: 700;
+        }
+        .hist-time { color: #94a3b8; font-size: .75rem; min-width: 3rem; }
+        .hist-team { color: #fde047; font-size: .78rem; }
+        .hist-label { color: #e2e8f0; flex: 1; min-width: 8rem; }
+        .hist-score { color: #86efac; font-weight: 900; white-space: nowrap; }
+
+        /* ============ MÀN HÌNH KẾT THÚC (Task 8) ============ */
+        .result-glass-bg { background: linear-gradient(135deg, rgba(30, 27, 75, .97), rgba(49, 46, 129, .95), rgba(2, 6, 23, .98)); }
+        .result-glass-bg::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(white 1px, transparent 1.5px), radial-gradient(white 1.4px, transparent 2px);
+            background-size: 46px 46px, 110px 110px; background-position: 0 0, 30px 40px;
+            opacity: .3; animation: starsMove 26s linear infinite;
+        }
+        .result-winner { animation: winnerPulse 1.4s ease-in-out infinite; }
+        @keyframes winnerPulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(250, 204, 21, .45); }
+            50% { box-shadow: 0 0 26px rgba(250, 204, 21, .9); }
+        }
+        @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: floatY 2.6s ease-in-out infinite; }
+
+        /* ============ CHẾ ĐỘ MÁY CHIẾU (Task 7) ============ */
+        body.projector-mode #team1-score, body.projector-mode #team2-score { font-size: clamp(2.6rem, 4.4vw, 4rem) !important; }
+        body.projector-mode #team1-select, body.projector-mode #team2-select { font-size: clamp(1.3rem, 2vw, 1.9rem) !important; }
+        body.projector-mode #team1-panel .text-right > div:first-child,
+        body.projector-mode #team2-panel .text-right > div:first-child { font-size: .85rem !important; letter-spacing: .06em; }
+        body.projector-mode .flipped-label { font-size: .95rem !important; }
+        body.projector-mode .evo-badge { font-size: 15px !important; padding: 3px 11px !important; }
+        body.projector-mode .card .tarot-font, body.projector-mode .card p { text-shadow: 0 2px 4px rgba(0, 0, 0, .45); }
+        body.projector-mode .card { box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
+        body.projector-mode #global-status { font-size: clamp(1.6rem, 3vw, 2.6rem) !important; }
+        body.projector-mode .tool-btn { width: 2.7rem; height: 2.7rem; font-size: 1.3rem; }
+
+        /* Đồng hồ nằm trong thanh công cụ (Task 3) — gọn, không đẩy tràn màn hình */
+        #game-timer-container { width: 2.75rem !important; height: 2.75rem !important; margin: 0 !important; flex-shrink: 0; }
+        #game-timer-text { font-size: 0.78rem !important; }
         .restart-block { margin-top: 0.25rem !important; margin-bottom: 0.25rem !important; }
 
 
