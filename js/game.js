@@ -2896,6 +2896,7 @@
         let pokeUploadSlot = null;   // ô đang chờ tải ảnh từ máy
         let pokeListShown = 60;      // số con đang hiển thị (cuộn xuống để thấy thêm)
         let pokeListMemory = null;   // cache danh sách Pokémon
+        const evolutionStageCache = new Map();
 
         function isFullArtSrc(v) { return typeof v === 'string' && /^(https?:|data:|\.\/|\/)/.test(v); }
 
@@ -2968,18 +2969,60 @@
                 '</tr>').join('');
         }
 
+        function setStageOverride(cfgId, stage, entry) {
+            if (!ART_OVERRIDES[cfgId]) ART_OVERRIDES[cfgId] = {};
+            ART_OVERRIDES[cfgId][stage] = entry;
+        }
+        // Lấy tuyến tiến hoá từ PokeAPI: Bellsprout → Weepinbell → Victreebel.
+        // Form như Mega/Gmax không có tuyến thường sẽ trả về chính Pokémon đã chọn.
+        async function getAutomaticEvolutionStages(pokemonId, fallbackLabel) {
+            const cacheKey = String(pokemonId);
+            if (evolutionStageCache.has(cacheKey)) return evolutionStageCache.get(cacheKey);
+            try {
+                const species = await (await fetch('https://pokeapi.co/api/v2/pokemon-species/' + encodeURIComponent(pokemonId))).json();
+                const chain = await (await fetch(species.evolution_chain.url)).json();
+                const names = [];
+                let node = chain.chain;
+                while (node && node.species) {
+                    names.push(node.species.name);
+                    node = (node.evolves_to || [])[0]; // dùng nhánh chính; giáo viên vẫn đổi riêng nếu cần
+                }
+                const list = await getPokeList();
+                const stages = names.map(name => {
+                    const found = (list || []).find(p => p.name === name);
+                    return found ? { provider: 'pokeapi', pokemonId: String(found.id), label: found.name.toUpperCase(), autoStage: true } : null;
+                }).filter(Boolean);
+                if (stages.length) { evolutionStageCache.set(cacheKey, stages); return stages; }
+            } catch (e) { console.warn('Không đọc được chuỗi tiến hoá:', e); }
+            const same = [{ provider: 'pokeapi', pokemonId: String(pokemonId), label: fallbackLabel || 'Pokémon đã chọn', autoStage: true }];
+            evolutionStageCache.set(cacheKey, same); return same;
+        }
         async function applyPokeChoice(slot, value, label, provider) {
             if (!slot) return false;
             const cfg = POKEMON_TEAMS.find(p => p.id === slot.cfgId) || {};
             const next = provider === 'link'
                 ? { provider: 'link', src: value, label: label || 'Link ảnh' }
                 : { provider: 'pokeapi', pokemonId: String(value), label: label || 'Pokémon đã chọn' };
-            if (!ART_OVERRIDES[slot.cfgId]) ART_OVERRIDES[slot.cfgId] = {};
-            ART_OVERRIDES[slot.cfgId][slot.stage] = next;
+            setStageOverride(slot.cfgId, slot.stage, next);
+            let autoMessage = '';
+            // Chọn Stage 1: Pokémon trong danh sách theo chuỗi tiến hoá; link ngoài giữ chính ảnh đó ở các Stage sau.
+            if (slot.stage === 1 && provider !== 'link') {
+                const chain = await getAutomaticEvolutionStages(value, next.label);
+                const selectedAt = Math.max(0, chain.findIndex(p => p.pokemonId === String(value)));
+                const stage2 = chain[Math.min(selectedAt + 1, chain.length - 1)] || next;
+                const stage3 = chain[Math.min(selectedAt + 2, chain.length - 1)] || stage2;
+                setStageOverride(slot.cfgId, 2, Object.assign({}, stage2));
+                setStageOverride(slot.cfgId, 3, Object.assign({}, stage3));
+                autoMessage = '\n\nStage 2–3 đã tự điền: ' + stage2.label + ' → ' + stage3.label + '. Anh vẫn có thể đổi riêng từng Stage.';
+            } else if (slot.stage === 1) {
+                setStageOverride(slot.cfgId, 2, Object.assign({}, next));
+                setStageOverride(slot.cfgId, 3, Object.assign({}, next));
+                autoMessage = '\n\nStage 2–3 đang dùng cùng ảnh này. Anh vẫn có thể đổi riêng từng Stage.';
+            }
             saveArtOverrides();
             renderPokeArtTable();
             refreshTeamsArt();
-            alert('✅ Đã đổi Avatar!\n\n' + (cfg.name || '') + ' · Stage ' + slot.stage + ' → ' + next.label + '\n\nẢnh hiện ngay trên bàn chơi. Nhớ tải bản sao lưu sau buổi học nhé.');
+            alert('✅ Đã đổi Avatar!\n\n' + (cfg.name || '') + ' · Stage ' + slot.stage + ' → ' + next.label + autoMessage + '\n\nẢnh hiện ngay trên bàn chơi.');
             return true;
         }
 
@@ -3097,10 +3140,15 @@
                 const assetKey = avatarAssetKey(slot.cfgId, slot.stage);
                 avatarAssets[assetKey] = dataUrl;
                 if (!await saveAvatarAssets()) { delete avatarAssets[assetKey]; return; }
-                if (!ART_OVERRIDES[slot.cfgId]) ART_OVERRIDES[slot.cfgId] = {};
-                ART_OVERRIDES[slot.cfgId][slot.stage] = { provider: 'upload', assetKey, label: 'Ảnh tải lên: ' + f.name };
+                const uploaded = { provider: 'upload', assetKey, label: 'Ảnh tải lên: ' + f.name };
+                setStageOverride(slot.cfgId, slot.stage, uploaded);
+                if (slot.stage === 1) {
+                    // Ảnh tự tải không có thông tin chuỗi tiến hoá: tự dùng ở cả 3 Stage.
+                    setStageOverride(slot.cfgId, 2, Object.assign({}, uploaded));
+                    setStageOverride(slot.cfgId, 3, Object.assign({}, uploaded));
+                }
                 saveArtOverrides(); renderPokeArtTable(); refreshTeamsArt();
-                alert('✅ Đã lưu Avatar vào kho an toàn.\n\nẢnh sẽ còn sau khi refresh và có trong bản sao lưu.');
+                alert('✅ Đã lưu Avatar vào kho an toàn.' + (slot.stage === 1 ? '\n\nStage 2–3 cũng tự dùng ảnh này; anh vẫn có thể đổi riêng sau đó.' : '') + '\n\nẢnh sẽ còn sau khi refresh và có trong bản sao lưu.');
             } catch (err) {
                 console.error('Avatar upload lỗi:', err);
                 alert('❌ Không xử lý được ảnh này. Anh thử ảnh JPG hoặc PNG khác nhé.');

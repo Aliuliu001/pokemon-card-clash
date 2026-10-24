@@ -40,3 +40,9 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - [x] **Task 6**: Backup/restore gồm cả avatar tải lên
 - [x] **Task 7**: Test bảng 11 đội, IndexedDB, điểm → Stage, reset về Stage 1
 - [x] **Task 8**: Push GitHub và kiểm tra trang online (`5689e9a`).
+
+## Avatar: tự điền Stage theo Pokémon chọn (anh yêu cầu 2026-10-24)
+
+- [x] **Task 9**: Khi chọn Stage 1, tìm chuỗi tiến hoá thật và tự điền Stage 2/3
+- [x] **Task 10**: Với Pokémon không có chuỗi thường / ảnh tự tải, tự dùng ảnh Stage 1 cho Stage sau
+- [x] **Task 11**: Test Bellsprout → Weepinbell → Victreebel và push GitHub Pages.
