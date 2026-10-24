@@ -39,4 +39,4 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - [x] **Task 5**: Bổ sung chọn / tải / bỏ ảnh tự chọn / sao chép Stage
 - [x] **Task 6**: Backup/restore gồm cả avatar tải lên
 - [x] **Task 7**: Test bảng 11 đội, IndexedDB, điểm → Stage, reset về Stage 1
-- [ ] **Task 8**: Push GitHub và kiểm tra trang online.
+- [x] **Task 8**: Push GitHub và kiểm tra trang online (`5689e9a`).
