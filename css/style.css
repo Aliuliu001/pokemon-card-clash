@@ -306,6 +306,66 @@
         .tool-btn.toggled-on { background-color: #14532d !important; border-color: #22c55e !important; box-shadow: 0 0 10px rgba(34, 197, 94, .65); }
         .tool-btn.toggled-off { opacity: .5; }
 
+        /* ============ SETTINGS: CỤM ĐIỂM GỌN, SÁNG, DỄ CHỈNH ============ */
+        .score-group {
+            border: 1px solid #475569;
+            border-radius: .75rem;
+            padding: .65rem .75rem;
+            background: #1e293b;
+        }
+        .score-group h4 {
+            font-size: .75rem;
+            font-weight: 900;
+            letter-spacing: .06em;
+            line-height: 1.2;
+            margin: 0 0 .45rem;
+            text-transform: uppercase;
+        }
+        .score-group-positive { background: rgba(20, 83, 45, .34); border-color: rgba(74, 222, 128, .42); }
+        .score-group-positive h4, .score-group-positive .score-stepper b { color: #86efac; }
+        .score-group-negative { background: rgba(127, 29, 29, .30); border-color: rgba(248, 113, 113, .42); }
+        .score-group-negative h4, .score-group-negative .score-stepper b { color: #fca5a5; }
+        .score-group-evolution { background: rgba(113, 63, 18, .30); border-color: rgba(250, 204, 21, .42); }
+        .score-group-evolution h4, .score-group-evolution .score-stepper b { color: #fde68a; }
+        .score-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .6rem;
+            min-height: 2.15rem;
+            font-size: .86rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .score-line + .score-line { border-top: 1px solid rgba(148, 163, 184, .18); }
+        .score-stepper {
+            display: inline-grid;
+            grid-template-columns: 1.8rem minmax(2.7rem, auto) 1.8rem;
+            align-items: center;
+            flex: 0 0 auto;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, .42);
+            border-radius: .45rem;
+            background: #0f172a;
+        }
+        .score-stepper button {
+            width: 1.8rem;
+            height: 1.8rem;
+            background: #334155;
+            color: #f8fafc;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1;
+            transition: background-color .15s ease, transform .15s ease;
+        }
+        .score-stepper button:hover { background: #475569; }
+        .score-stepper button:active { transform: scale(.90); }
+        .score-stepper b { min-width: 2.7rem; padding: 0 .35rem; text-align: center; font-size: .9rem; }
+        @media (max-width: 639px) {
+            .score-group { padding: .6rem; }
+            .score-line { font-size: .82rem; }
+        }
+
         /* ============ NHẬT KÝ ĐIỂM (Task 5) ============ */
         .hist-item {
             display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;

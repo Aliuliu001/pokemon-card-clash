@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=14">
+    <link rel="stylesheet" href="css/style.css?v=15">
 </head>
 <body class="p-1 md:p-2 pb-3 md:pb-3 flex flex-col items-center relative overflow-x-hidden">
 
@@ -136,14 +136,20 @@
     
     <!-- SETTINGS MODAL — KHÔNG tự mở khi vào trang (Task 3: bấm ⚙️ mới mở) -->
     <div id="settings-modal" class="fixed inset-0 bg-black/90 z-50 flex-col items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 p-4 md:p-6 rounded-2xl w-full max-w-5xl border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-[90vh]">
-            <h2 class="text-xl md:text-2xl font-black text-white mb-1 tarot-font tracking-wider">CẬP NHẬT DỮ LIỆU TỪ EXCEL</h2>
-            
+        <div class="bg-slate-800 rounded-2xl w-full max-w-5xl border-4 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden">
+            <!-- Tiêu đề luôn hiện -->
+            <div class="flex-none px-4 pt-4 pb-3 md:px-6 md:pt-5 bg-slate-800 border-b border-slate-700">
+                <h2 class="text-xl md:text-2xl font-black text-white tarot-font tracking-wider">CẬP NHẬT DỮ LIỆU TỪ EXCEL</h2>
+                <p class="text-slate-400 text-xs mt-1">Cài đặt game, ảnh Pokémon và bảng dữ liệu bài học.</p>
+            </div>
+
+            <!-- Nội dung cuộn: tất cả các phần dài nằm trong đây -->
+            <div id="settings-modal-body" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar px-4 py-3 md:px-6 md:py-4">
             <!-- Khu vực Tùy chỉnh Hiển thị -->
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-600 mb-3 flex flex-col gap-3 shadow-inner mt-2">
                 <h3 class="text-yellow-400 font-bold text-sm md:text-base uppercase">⚙️ Tuỳ chỉnh Hiển thị &amp; Cài đặt Game</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                    <div class="flex-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                    <div class="min-w-0">
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Số lượng Thẻ:</label>
                         <select id="setting-cards-count" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
                             <option value="9">9 Thẻ / Đội</option>
@@ -152,7 +158,7 @@
                             <option value="20" selected="">20 Thẻ / Đội</option>
                         </select>
                     </div>
-                    <div class="flex-1">
+                    <div class="min-w-0">
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Mặt Trước (Câu hỏi):</label>
                         <select id="setting-front-mode" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
                             <option value="both">Hình Ảnh &amp; Từ Vựng</option>
@@ -160,7 +166,7 @@
                             <option value="text">Chỉ hiển thị Từ Vựng</option>
                         </select>
                     </div>
-                    <div class="flex-1">
+                    <div class="min-w-0">
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Mặt Sau (Lật thẻ):</label>
                         <select id="setting-back-mode" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
                             <option value="full">Đầy đủ (Hình, Câu, Điểm)</option>
@@ -169,90 +175,47 @@
                             <option value="points">Chỉ hiển thị Điểm Số</option>
                         </select>
                     </div>
-                    <div class="flex-1">
+                    <div class="min-w-0">
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Đồng hồ (Timer):</label>
                         <select id="setting-timer-enabled" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
                             <option value="on">Bật (On)</option>
                             <option value="off">Tắt (Off)</option>
                         </select>
                     </div>
-                    <div class="flex-1">
+                    <div class="min-w-0">
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Thời gian (Giây/Thẻ):</label>
                         <input type="number" id="setting-global-time" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-base p-2.5 rounded-lg outline-none border border-slate-500 shadow-md transition-colors font-semibold" value="180" min="30">
                     </div>
                 </div>
             </div>
 
-            <!-- BẢNG PHẲNG (Task 4): ĐIỂM SỐ + TIẾN HOÁ + ÂM THANH — thấy hết trong 1 màn hình -->
+            <!-- ĐIỂM SỐ + TIẾN HOÁ + ÂM THANH: gọn thành các nhóm rõ ràng -->
             <div id="score-settings-section" class="bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-600 mb-3 shadow-inner">
-                <h3 class="text-yellow-400 font-bold text-sm md:text-base uppercase mb-2">📐 Điểm Số, Tiến Hoá &amp; Âm Thanh</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
-                            <tr class="text-slate-400 text-[11px] md:text-xs uppercase">
-                                <th class="py-1.5 pr-2 border-b border-slate-700">Mục</th>
-                                <th class="py-1.5 px-2 border-b border-slate-700 text-center w-20">Giá trị</th>
-                                <th class="py-1.5 pl-2 border-b border-slate-700 text-center w-28">− / +</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-slate-200">
-                            <tr class="border-b border-slate-800">
-                                <td class="py-1.5 pr-2">Điểm cộng tối thiểu (+)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-green-400"><span id="val-posMin">10</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('posMin', -10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('posMin', 10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-800">
-                                <td class="py-1.5 pr-2">Điểm cộng tối đa (+)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-green-400"><span id="val-posMax">100</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('posMax', -10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('posMax', 10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-800">
-                                <td class="py-1.5 pr-2">Điểm trừ nhẹ nhất (−)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-red-400"><span id="val-negMin">-10</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('negMin', -10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('negMin', 10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-800">
-                                <td class="py-1.5 pr-2">Điểm trừ nặng nhất (−)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-red-400"><span id="val-negMax">-40</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('negMax', -10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('negMax', 10)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-800 bg-yellow-950/40">
-                                <td class="py-1.5 pr-2">⚡ Tiến hoá LV.2 (điểm)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-yellow-300"><span id="val-evoLv2">150</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('evoLv2', -50)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('evoLv2', 50)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="py-1.5 pr-2">⚡ Tiến hoá LV.3 (điểm)</td>
-                                <td class="py-1.5 px-2 text-center font-black text-yellow-300"><span id="val-evoLv3">400</span></td>
-                                <td class="py-1.5 pl-2 text-center whitespace-nowrap">
-                                    <button onclick="updateScoreSetting('evoLv3', -50)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">−</button>
-                                    <button onclick="updateScoreSetting('evoLv3', 50)" class="w-7 h-7 md:w-8 md:h-8 bg-slate-600 hover:bg-slate-500 rounded font-bold text-white active:scale-95">+</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <h3 class="text-yellow-400 font-bold text-sm md:text-base uppercase mb-3">📐 Điểm Số, Tiến Hoá &amp; Âm Thanh</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <section class="score-group score-group-positive">
+                        <h4>➕ Điểm cộng</h4>
+                        <div class="score-line"><span>Tối thiểu</span><div class="score-stepper"><button onclick="updateScoreSetting('posMin', -10)">−</button><b id="val-posMin">10</b><button onclick="updateScoreSetting('posMin', 10)">+</button></div></div>
+                        <div class="score-line"><span>Tối đa</span><div class="score-stepper"><button onclick="updateScoreSetting('posMax', -10)">−</button><b id="val-posMax">100</b><button onclick="updateScoreSetting('posMax', 10)">+</button></div></div>
+                    </section>
+                    <section class="score-group score-group-negative">
+                        <h4>➖ Điểm trừ</h4>
+                        <div class="score-line"><span>Nhẹ nhất</span><div class="score-stepper"><button onclick="updateScoreSetting('negMin', -10)">−</button><b id="val-negMin">-10</b><button onclick="updateScoreSetting('negMin', 10)">+</button></div></div>
+                        <div class="score-line"><span>Nặng nhất</span><div class="score-stepper"><button onclick="updateScoreSetting('negMax', -10)">−</button><b id="val-negMax">-40</b><button onclick="updateScoreSetting('negMax', 10)">+</button></div></div>
+                    </section>
                 </div>
+                <section class="score-group score-group-evolution mt-3">
+                    <h4>⚡ Mốc tiến hoá</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="score-line"><span>LV.2</span><div class="score-stepper"><button onclick="updateScoreSetting('evoLv2', -50)">−</button><b id="val-evoLv2">150</b><button onclick="updateScoreSetting('evoLv2', 50)">+</button></div></div>
+                        <div class="score-line"><span>LV.3</span><div class="score-stepper"><button onclick="updateScoreSetting('evoLv3', -50)">−</button><b id="val-evoLv3">400</b><button onclick="updateScoreSetting('evoLv3', 50)">+</button></div></div>
+                    </div>
+                </section>
                 <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 pt-3 border-t border-slate-700 text-sm text-slate-200">
                     <label class="flex items-center gap-2 cursor-pointer font-semibold"><input type="checkbox" id="setting-sfx" class="w-4 h-4 accent-green-500"> 🔊 Hiệu ứng âm thanh</label>
                     <label class="flex items-center gap-2 cursor-pointer font-semibold"><input type="checkbox" id="setting-bgm" class="w-4 h-4 accent-green-500"> 🎵 Nhạc nền</label>
                     <label class="flex items-center gap-2 cursor-pointer font-semibold"><input type="checkbox" id="setting-projector" class="w-4 h-4 accent-green-500"> 📽️ Chế độ máy chiếu</label>
                 </div>
-                <p class="text-slate-400 text-[11px] mt-2">Đủ điểm đội sẽ tiến hoá (đổi ảnh + hào quang + badge LV). 3 công tắc trên lưu lại cho lần chơi sau.</p>
             </div>
 
 
@@ -329,13 +292,14 @@
                 <div id="image-pool-gallery" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-64 overflow-y-auto custom-scrollbar p-1"></div>
             </div>
 
-            <!-- Excel Instructions -->
-            <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-600/50 mb-3">
+            <!-- Bảng dữ liệu Excel -->
+            <section class="bg-slate-800/50 p-3 rounded-lg border border-slate-600/50 mb-3">
+                <h3 class="text-yellow-400 font-bold text-sm uppercase mb-1">📋 Bảng nhập dữ liệu Excel</h3>
                 <p class="text-slate-300 text-xs md:text-sm">
                     Mở Excel, bôi đen cả 5 cột, copy và nhấn <b>Ctrl+V</b> vào ô đầu tiên của bảng dưới. <br>
                     <b class="text-yellow-400">Lưu ý:</b> Bỏ trống <b>ID Ảnh Sau</b> -&gt; Thẻ chỉ có Chữ to. Bỏ trống <b>Thời gian</b> -&gt; Thẻ không có Bom.
                 </p>
-            </div>
+            </section>
 
             <!-- Table Control Buttons -->
             <div class="mb-3">
@@ -373,8 +337,8 @@
                 </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-slate-900 border border-slate-600 rounded-xl relative mt-2">
-                <table class="w-full text-left text-sm text-slate-300 border-collapse table-fixed">
+            <div id="excel-data-table-scroll" class="min-h-[240px] max-h-[48dvh] overflow-auto custom-scrollbar bg-slate-900 border border-slate-600 rounded-xl relative mt-2">
+                <table class="min-w-[720px] w-full text-left text-sm text-slate-300 border-collapse table-fixed">
                     <thead class="sticky top-0 bg-slate-700 text-xs uppercase shadow-md z-10">
                         <tr>
                             <th class="px-1 py-3 border-b border-r border-slate-600 text-yellow-400 w-[12%] text-center">ID Trước</th>
@@ -388,7 +352,10 @@
                 </table>
             </div>
             
-            <div class="flex justify-end gap-3 mt-4 w-full">
+            </div><!-- /#settings-modal-body -->
+
+            <!-- Nút thao tác luôn hiện, không bị bảng dài đẩy xuống -->
+            <div class="flex-none flex justify-end gap-3 px-4 py-3 md:px-6 md:py-4 w-full bg-slate-800 border-t border-slate-700">
                 <button id="btn-close-settings" class="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-bold transition-colors">Hủy</button>
                 <button id="btn-save-settings" class="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-colors shadow-lg">Lưu &amp; Khởi động lại</button>
             </div>
