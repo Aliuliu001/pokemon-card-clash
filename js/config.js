@@ -45,6 +45,11 @@ const MAX_ROWS = 100;
         };
         POKEMON_TEAMS.forEach(p => { p.evos = TEAM_EVOLUTIONS[p.id] || []; });
 
+        // Task 10: ảnh Pokémon do thầy CHỌN thay ảnh nạp cứng.
+        // Cấu trúc: ART_OVERRIDES[idPokemon][nangCap] = { src, label }
+        //   src = số id (lấy trong danh sách PokeAPI) | link https | data:URL (ảnh tải lên)
+        let ART_OVERRIDES = {};
+
         const EFFECT_SETTINGS = { explosionDelayMs: 1500, freezeDelayMs: 1500 };
         const AVATAR_SETTINGS = { happyEffectEnabled: true, sadEffectEnabled: true };
 

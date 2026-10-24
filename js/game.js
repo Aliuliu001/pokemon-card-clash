@@ -638,6 +638,7 @@
             sm.classList.remove('hidden'); sm.classList.add('flex');
             refreshScoreSettingValues();
             syncSettingsToggles();
+            if (typeof renderPokeArtTable === 'function') renderPokeArtTable(); // Task 10
             if (scrollToScore) {
                 const sec = document.getElementById('score-settings-section');
                 if (sec) setTimeout(() => sec.scrollIntoView({ block: 'center' }), 50);
@@ -1069,12 +1070,19 @@
         const ARTWORK_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
         const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 
-        function setAvatarArt(teamKey, pokeId) {
+        function setAvatarArt(teamKey, art) {
             const img = document.getElementById(`${teamKey}-avatar`);
             if (!img) return;
-            // Ảnh artwork to, nét; nếu link lỗi → tự rơi về sprite pixel cũ (không bao giờ để ảnh trống)
-            img.onerror = function () { img.onerror = null; img.src = SPRITE_BASE + pokeId + '.png'; };
-            img.src = ARTWORK_BASE + pokeId + '.png';
+            const src = typeof art === 'object' ? art.src : art;
+            const isFullSrc = typeof src === 'string' && /^(https?:|data:|\.\/|\/)/.test(src);
+            const fb = (teams[teamKey] && teams[teamKey].config) ? teams[teamKey].config.id : '25';
+            if (isFullSrc) {
+                img.onerror = function () { img.onerror = null; img.src = ARTWORK_BASE + fb + '.png'; };
+                img.src = src;
+            } else {
+                img.onerror = function () { img.onerror=null; img.src = SPRITE_BASE + src + '.png'; };
+                img.src = ARTWORK_BASE + src + '.png';
+            }
         }
 
         function evoThresholds() {
@@ -1091,46 +1099,38 @@
             return 1;
         }
 
-        function updateEvolution(teamKey) {
+        function updateEvolution(teamKey, silent, forceStage) {
             const team = teams[teamKey];
-            const stage = getEvolutionStage(teamKey);
-            if (team.evoStage === stage) return;
+            const eligible = forceStage || getEvolutionStage(teamKey);
+            // Đã mở Stage thì giữ tới khi anh bấm Chơi lại: thẻ HALVE/SWAP/LOSE không làm tụt avatar.
+            team.highestStageUnlocked = Math.max(team.highestStageUnlocked || 1, eligible);
+            const stage = forceStage || team.highestStageUnlocked;
             const prev = team.evoStage || 1;
+            const art = resolveAvatarArt(team.config, stage);
             team.evoStage = stage;
-
-            const evos = team.config.evos || [];
-            let artId = team.config.id, artName = team.config.name;
-            if (stage >= 2 && evos.length) {
-                const idx = Math.min(stage - 2, evos.length - 1); // hết dạng tiến hoá → giữ dạng mạnh nhất
-                artId = evos[idx].id;
-                artName = evos[idx].name;
-            }
-            if (!team.config.customImg) setAvatarArt(teamKey, artId);
+            if (!team.config.customImg || art) setAvatarArt(teamKey, art);
 
             const badge = document.getElementById(`${teamKey}-level`);
             if (badge) {
                 badge.className = 'evo-badge' + (stage === 2 ? ' lv2' : stage === 3 ? ' lv3' : '');
                 badge.innerText = 'LV.' + stage;
-                badge.title = stage === 1 ? `Chưa tiến hoá — ${team.config.name}` : `Đã tiến hoá: ${artName}`;
+                badge.title = stage === 1 ? `Stage 1 — ${team.config.name}` : `Stage ${stage} — ${art.label || team.config.name}`;
                 if (stage > prev) { badge.classList.remove('evo-pop'); void badge.offsetWidth; badge.classList.add('evo-pop'); }
             }
-
             const box = document.querySelector(`#${teamKey}-panel .team-avatar-box`);
             if (box) {
                 box.classList.remove('evo-aura-2', 'evo-aura-3');
                 if (stage === 2) box.classList.add('evo-aura-2');
                 if (stage === 3) box.classList.add('evo-aura-3');
             }
-            if (stage > prev) playSoundEffect('match'); // âm báo khi tiến hoá
+            if (stage > prev && !silent) playSoundEffect('match');
         }
 
         function resetEvolution(teamKey) {
             const team = teams[teamKey];
-            team.evoStage = 1;
-            const badge = document.getElementById(`${teamKey}-level`);
-            if (badge) { badge.className = 'evo-badge'; badge.innerText = 'LV.1'; badge.title = `Chưa tiến hoá — ${team.config.name}`; }
-            const box = document.querySelector(`#${teamKey}-panel .team-avatar-box`);
-            if (box) box.classList.remove('evo-aura-2', 'evo-aura-3');
+            team.highestStageUnlocked = 1;
+            team.evoStage = 0;
+            updateEvolution(teamKey, true, 1); // trả cả ảnh, badge và hào quang về Stage 1
         }
 
         function applyTheme(teamKey) {
@@ -1149,7 +1149,8 @@
             } else {
                 setAvatarArt(teamKey, team.config.id);
             }
-            team.evoStage = 0;      // ép vẽ lại cấp tiến hoá theo đội mới chọn
+            team.highestStageUnlocked = 1;
+            team.evoStage = 0;      // đội mới luôn bắt đầu Stage 1
             updateEvolution(teamKey);
             document.getElementById('main-title').innerText = `CLASH: ${teams.team1.config.name} vs ${teams.team2.config.name}`;
             renderBoard(teamKey);
@@ -2161,7 +2162,7 @@
         document.getElementById('btn-end-early').addEventListener('click', triggerWinCelebration);
         // Nạp kho ảnh (IndexedDB) TRƯỚC khi vẽ game lần đầu, để thẻ bài không hiện "Missing"
         (async () => {
-            try { await loadImagesPool(); } catch (e) { console.error('Nạp kho ảnh lỗi:', e); }
+            try { await loadImagesPool(); await loadAvatarAssets(); await migrateLegacyAvatarOverrides(); renderPokeArtTable(); refreshTeamsArt(); } catch (e) { console.error('Nạp kho ảnh/Avatar lỗi:', e); }
             initGame();
             renderAlbumSelect(); // vẽ danh sách chủ đề sau khi đã nạp album (Bước 5)
         })();
@@ -2419,7 +2420,10 @@
                     albums: albums,
                     currentAlbum: currentAlbumName,
                     // Task 8: bảng xếp hạng cũng nằm trong file sao lưu
-                    ranking: getRanking()
+                    ranking: getRanking(),
+                    // Avatar: metadata + toàn bộ ảnh tải lên trong kho riêng
+                    artOverrides: ART_OVERRIDES,
+                    avatarAssets: avatarAssets
                 };
                 const nAlbums = Object.keys(albums).length;
                 const nImg = Object.values(albums).reduce((s, a) => s + Object.keys(a || {}).length, 0);
@@ -2556,6 +2560,8 @@
                 SafeStore.set(backupDataKey('pokemonClashDataJSON'), JSON.stringify(payload.dataJSON));
                 if (payload.settings) SafeStore.set(backupDataKey('pokemonClashSettings'), JSON.stringify(payload.settings));
                 if (Array.isArray(payload.ranking)) SafeStore.set(backupDataKey('pokemonClashRanking'), JSON.stringify(payload.ranking)); // Task 8
+                if (payload.artOverrides && typeof payload.artOverrides === 'object') { ART_OVERRIDES = payload.artOverrides; saveArtOverrides(); }
+                if (payload.avatarAssets && typeof payload.avatarAssets === 'object') { avatarAssets = payload.avatarAssets; await saveAvatarAssets(); }
                 // 2) Album + kho ảnh → IndexedDB (trượt thì về localStorage)
                 albums = restoredAlbums.albums;
                 currentAlbumName = restoredAlbums.current;
@@ -2851,3 +2857,285 @@
                 reader.onerror = error => reject(error);
             });
         }
+
+
+        // ================== AVATAR POKÉMON: lựa chọn + kho an toàn ==================
+        // Metadata nhỏ nằm localStorage; ảnh upload nằm riêng trong IndexedDB, không đụng kho ảnh thẻ.
+        let avatarAssets = {};
+        function avatarAssetsKey() { return backupDataKey('pokemonClashAvatarAssets'); }
+        async function loadAvatarAssets() {
+            try { avatarAssets = await ImageDB.get(avatarAssetsKey()) || {}; }
+            catch (e) { avatarAssets = {}; console.warn('Không mở được kho Avatar:', e); }
+        }
+        async function saveAvatarAssets() {
+            try { await ImageDB.set(avatarAssetsKey(), avatarAssets); return true; }
+            catch (e) { alert('❌ Không lưu được ảnh Avatar vào bộ nhớ trình duyệt. Ảnh chưa được thay đổi.'); return false; }
+        }
+        function avatarAssetKey(cfgId, stage) { return `avatar:${cfgId}:stage:${stage}`; }
+        function overrideStatus(ov) {
+            if (!ov) return 'Mặc định';
+            if (ov.provider === 'upload') return 'Ảnh tải lên';
+            if (ov.provider === 'link') return 'Link ảnh';
+            return 'Đã chọn';
+        }
+        // Hỗ trợ dữ liệu cũ {src:dataURL,label}: tự dời vào IndexedDB khi mở game.
+        async function migrateLegacyAvatarOverrides() {
+            let changed = false;
+            for (const cfgId in ART_OVERRIDES) for (const stage in (ART_OVERRIDES[cfgId] || {})) {
+                const ov = ART_OVERRIDES[cfgId][stage];
+                if (ov && typeof ov.src === 'string' && ov.src.startsWith('data:')) {
+                    const assetKey = avatarAssetKey(cfgId, stage);
+                    avatarAssets[assetKey] = ov.src;
+                    ART_OVERRIDES[cfgId][stage] = { provider: 'upload', assetKey, label: ov.label || 'Ảnh tải lên' };
+                    changed = true;
+                }
+            }
+            if (changed) { if (await saveAvatarAssets()) saveArtOverrides(); }
+        }
+        let pokePickerSlot = null;   // ô đang chọn trong hộp danh sách
+        let pokeUploadSlot = null;   // ô đang chờ tải ảnh từ máy
+        let pokeListShown = 60;      // số con đang hiển thị (cuộn xuống để thấy thêm)
+        let pokeListMemory = null;   // cache danh sách Pokémon
+
+        function isFullArtSrc(v) { return typeof v === 'string' && /^(https?:|data:|\.\/|\/)/.test(v); }
+
+        function artOverrideFor(cfgId, stage) {
+            const o = ART_OVERRIDES[cfgId];
+            return (o && o[stage]) ? o[stage] : null;
+        }
+        function defaultArtFor(cfg, stage) {
+            const evos = cfg.evos || [];
+            if (stage >= 2 && evos.length) {
+                const e = evos[Math.min(stage - 2, evos.length - 1)];
+                return { provider: 'pokeapi', pokemonId: String(e.id), label: e.name, formType: stage === 2 ? 'power' : 'peak' };
+            }
+            return { provider: 'pokeapi', pokemonId: String(cfg.id), label: cfg.name, formType: 'base' };
+        }
+        function resolveAvatarArt(cfg, stage) {
+            const ov = artOverrideFor(cfg.id, stage);
+            if (ov) {
+                if (ov.provider === 'upload' && ov.assetKey && avatarAssets[ov.assetKey]) return Object.assign({}, ov, { src: avatarAssets[ov.assetKey] });
+                if (ov.provider === 'link' && ov.src) return ov;
+                if (ov.src) return ov; // tương thích bản cũ/chọn PokeAPI theo id
+                if (ov.pokemonId) return Object.assign({}, ov, { src: ov.pokemonId });
+            }
+            const d = defaultArtFor(cfg, stage);
+            return Object.assign({}, d, { src: d.pokemonId });
+        }
+        function loadArtOverrides() {
+            try { ART_OVERRIDES = JSON.parse(SafeStore.get(backupDataKey('pokemonClashArtOverrides')) || '{}') || {}; }
+            catch (e) { ART_OVERRIDES = {}; }
+        }
+        function saveArtOverrides() {
+            try { SafeStore.set(backupDataKey('pokemonClashArtOverrides'), JSON.stringify(ART_OVERRIDES)); } catch (e) { }
+            markDataDirty(); // nhắc thầy tải bản sao lưu (ảnh Pokémon cũng nằm trong file JSON)
+        }
+        function refreshTeamsArt() {
+            ['team1', 'team2'].forEach(k => {
+                if (!teams[k]) return;
+                teams[k].evoStage = 0;
+                updateEvolution(k, true); // silent: không kêu âm báo khi vẽ lại
+            });
+        }
+
+        // --- Vẽ bảng 11 đội × 3 Stage trong Settings ---
+        function renderPokeArtTable() {
+            const box = document.getElementById('poke-art-table');
+            if (!box) return;
+            const cell = (cfg, stage) => {
+                const ov = artOverrideFor(cfg.id, stage);
+                const d = resolveAvatarArt(cfg, stage);
+                const full = isFullArtSrc(d.src);
+                const thumb = full ? d.src : ARTWORK_BASE + d.src + '.png';
+                const fb = full ? "this.onerror=null;this.src='" + ARTWORK_BASE + cfg.id + ".png';" : "this.onerror=null;this.src='" + SPRITE_BASE + d.src + ".png';";
+                const status = overrideStatus(ov);
+                const copy = stage > 1 ? '<button type="button" class="poke-btn poke-btn-copy" data-act="copy1" data-cfg="' + cfg.id + '" data-lv="' + stage + '">↪ Dùng S1</button>' : '';
+                const remove = ov ? '<button type="button" class="poke-btn poke-btn-remove" data-act="remove" data-cfg="' + cfg.id + '" data-lv="' + stage + '">🗑 Bỏ ảnh</button>' : '';
+                return '<td class="poke-art-cell' + (ov ? ' is-changed' : '') + '">' +
+                    '<div class="poke-art-preview"><img class="poke-art-thumb" src="' + thumb + '" loading="lazy" onerror="' + fb + '" alt="' + escHtml(d.label) + '"></div>' +
+                    '<div class="poke-art-label">' + escHtml(d.label || cfg.name) + '</div>' +
+                    '<div class="poke-art-status">' + escHtml(status) + '</div>' +
+                    '<div class="poke-art-btns">' +
+                      '<button type="button" class="poke-btn poke-btn-pick" data-act="pick" data-cfg="' + cfg.id + '" data-lv="' + stage + '">🔍 Chọn</button>' +
+                      '<button type="button" class="poke-btn poke-btn-upload" data-act="up" data-cfg="' + cfg.id + '" data-lv="' + stage + '">⬆️ Tải ảnh</button>' +
+                      copy + remove +
+                    '</div></td>';
+            };
+            box.innerHTML = POKEMON_TEAMS.map(cfg =>
+                '<tr class="poke-art-row">' +
+                '<td class="poke-art-name"><span class="poke-team-dot" style="background:' + cfg.main + '"></span><b>TEAM ' + escHtml(cfg.name) + '</b><small>Avatar theo mốc điểm</small></td>' +
+                cell(cfg, 1) + cell(cfg, 2) + cell(cfg, 3) +
+                '</tr>').join('');
+        }
+
+        async function applyPokeChoice(slot, value, label, provider) {
+            if (!slot) return false;
+            const cfg = POKEMON_TEAMS.find(p => p.id === slot.cfgId) || {};
+            const next = provider === 'link'
+                ? { provider: 'link', src: value, label: label || 'Link ảnh' }
+                : { provider: 'pokeapi', pokemonId: String(value), label: label || 'Pokémon đã chọn' };
+            if (!ART_OVERRIDES[slot.cfgId]) ART_OVERRIDES[slot.cfgId] = {};
+            ART_OVERRIDES[slot.cfgId][slot.stage] = next;
+            saveArtOverrides();
+            renderPokeArtTable();
+            refreshTeamsArt();
+            alert('✅ Đã đổi Avatar!\n\n' + (cfg.name || '') + ' · Stage ' + slot.stage + ' → ' + next.label + '\n\nẢnh hiện ngay trên bàn chơi. Nhớ tải bản sao lưu sau buổi học nhé.');
+            return true;
+        }
+
+        // --- Danh sách Pokémon (PokeAPI: Gen 1-9 + Mega + Dynamax/Gmax) ---
+        async function getPokeList() {
+            if (pokeListMemory) return pokeListMemory;
+            try {
+                const cached = SafeStore.get(backupDataKey('pokemonClashPokeList'));
+                if (cached) {
+                    const j = JSON.parse(cached);
+                    if (Array.isArray(j) && j.length > 100) { pokeListMemory = j; return j; }
+                }
+            } catch (e) { }
+            try {
+                const r = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302');
+                const j = await r.json();
+                const list = (j.results || []).map(p => {
+                    const id = String(p.url).replace(/\/+$/, '').split('/').pop();
+                    return { id: id, name: p.name };
+                }).filter(p => p.id && p.name);
+                if (list.length > 100) {
+                    pokeListMemory = list;
+                    try { SafeStore.set(backupDataKey('pokemonClashPokeList'), JSON.stringify(list)); } catch (e) { }
+                }
+                return list;
+            } catch (e) { return null; }
+        }
+
+        async function renderPokePickerList() {
+            const grid = document.getElementById('poke-picker-grid');
+            const cnt = document.getElementById('poke-list-count');
+            if (!grid) return;
+            const list = await getPokeList();
+            if (!list) {
+                grid.innerHTML = '<div class="text-amber-300 text-sm p-4 leading-relaxed">⚠️ Không tải được danh sách Pokémon (máy đang không có mạng hoặc PokeAPI chặn).<br>Anh vẫn dùng được ô <b>Dán link ảnh</b> phía trên.</div>';
+                if (cnt) cnt.innerText = '';
+                return;
+            }
+            const q = ((document.getElementById('poke-search') || {}).value || '').trim().toLowerCase().replace(/^#/, '');
+            const filtered = list.filter(p => !q || p.name.indexOf(q) !== -1 || p.id === q);
+            if (cnt) cnt.innerText = filtered.length + ' kết quả' + (q ? '' : ' — gõ để tìm nhanh');
+            const shown = filtered.slice(0, pokeListShown);
+            let html = shown.map(p =>
+                '<button type="button" class="poke-pick" data-id="' + p.id + '" data-name="' + escHtml(p.name) + '">' +
+                '<img loading="lazy" src="' + ARTWORK_BASE + p.id + '.png" onerror="this.onerror=null;this.src=\'' + SPRITE_BASE + p.id + '.png\';">' +
+                '<span>' + escHtml(p.name) + '</span></button>').join('');
+            if (filtered.length > pokeListShown) {
+                html += '<button type="button" id="poke-more" class="poke-more">Xem thêm ' + Math.min(60, filtered.length - pokeListShown) + ' con →</button>';
+            }
+            if (!shown.length) html = '<div class="text-slate-400 text-sm p-4">Không thấy con nào khớp — thử tên khác hoặc dán link ảnh.</div>';
+            grid.innerHTML = html;
+        }
+
+        async function openPokePicker(cfgId, stage) {
+            pokePickerSlot = { cfgId: cfgId, stage: stage };
+            const cfg = POKEMON_TEAMS.find(p => p.id === cfgId) || { name: '' };
+            const t = document.getElementById('poke-picker-title');
+            if (t) t.innerText = 'CHỌN ẢNH — ' + cfg.name + ' · LV.' + stage;
+            const cur = artOverrideFor(cfgId, stage);
+            const link = document.getElementById('poke-link-input');
+            if (link) link.value = (cur && isFullArtSrc(cur.src) && !String(cur.src).indexOf('data:') === 0 && /^(https?:)/.test(cur.src)) ? cur.src : '';
+            pokeListShown = 60;
+            const search = document.getElementById('poke-search');
+            if (search) search.value = '';
+            const m = document.getElementById('poke-picker-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            await renderPokePickerList();
+        }
+        function closePokePicker() {
+            const m = document.getElementById('poke-picker-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            pokePickerSlot = null;
+        }
+
+        // --- Gắn sự kiện ---
+        const pokeTable = document.getElementById('poke-art-table');
+        if (pokeTable) pokeTable.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-act]');
+            if (!b) return;
+            const cfgId = b.getAttribute('data-cfg');
+            const lv = parseInt(b.getAttribute('data-lv'), 10);
+            const act = b.getAttribute('data-act');
+            if (act === 'pick') { openPokePicker(cfgId, lv); return; }
+            if (act === 'up') {
+                pokeUploadSlot = { cfgId: cfgId, stage: lv };
+                const inp = document.getElementById('poke-art-upload');
+                if (inp) { inp.value = ''; inp.click(); }
+                return;
+            }
+            if (act === 'copy1') {
+                const source = artOverrideFor(cfgId, 1);
+                const cfg = POKEMON_TEAMS.find(p => p.id === cfgId);
+                const base = source || defaultArtFor(cfg, 1);
+                if (!ART_OVERRIDES[cfgId]) ART_OVERRIDES[cfgId] = {};
+                ART_OVERRIDES[cfgId][lv] = Object.assign({}, base);
+                saveArtOverrides(); renderPokeArtTable(); refreshTeamsArt(); return;
+            }
+            if (act === 'remove') {
+                if (!confirm('Bỏ ảnh tự chọn của Stage ' + lv + ' và dùng ảnh mặc định?')) return;
+                if (ART_OVERRIDES[cfgId]) { delete ART_OVERRIDES[cfgId][lv]; if (!Object.keys(ART_OVERRIDES[cfgId]).length) delete ART_OVERRIDES[cfgId]; }
+                saveArtOverrides(); renderPokeArtTable(); refreshTeamsArt();
+            }
+        });
+
+        const pokeUpload = document.getElementById('poke-art-upload');
+        if (pokeUpload) pokeUpload.addEventListener('change', async (e) => {
+            const f = e.target.files && e.target.files[0];
+            const slot = pokeUploadSlot;
+            pokeUploadSlot = null;
+            if (!f || !slot) return;
+            if (!f.type.startsWith('image/')) { alert('❌ File này không phải ảnh.'); return; }
+            try {
+                // Avatar hiển thị nhỏ: tự nén trước khi đưa vào IndexedDB để backup nhẹ, không giới hạn 2.5MB giả tạo.
+                const dataUrl = await compressImage(f, 600, 0.88);
+                const assetKey = avatarAssetKey(slot.cfgId, slot.stage);
+                avatarAssets[assetKey] = dataUrl;
+                if (!await saveAvatarAssets()) { delete avatarAssets[assetKey]; return; }
+                if (!ART_OVERRIDES[slot.cfgId]) ART_OVERRIDES[slot.cfgId] = {};
+                ART_OVERRIDES[slot.cfgId][slot.stage] = { provider: 'upload', assetKey, label: 'Ảnh tải lên: ' + f.name };
+                saveArtOverrides(); renderPokeArtTable(); refreshTeamsArt();
+                alert('✅ Đã lưu Avatar vào kho an toàn.\n\nẢnh sẽ còn sau khi refresh và có trong bản sao lưu.');
+            } catch (err) {
+                console.error('Avatar upload lỗi:', err);
+                alert('❌ Không xử lý được ảnh này. Anh thử ảnh JPG hoặc PNG khác nhé.');
+            }
+        });
+
+        const pokeSearch = document.getElementById('poke-search');
+        if (pokeSearch) {
+            let pokeSearchTimer;
+            pokeSearch.addEventListener('input', () => {
+                clearTimeout(pokeSearchTimer);
+                pokeSearchTimer = setTimeout(() => { pokeListShown = 60; renderPokePickerList(); }, 220);
+            });
+        }
+        const pokeGrid = document.getElementById('poke-picker-grid');
+        if (pokeGrid) pokeGrid.addEventListener('click', (e) => {
+            const more = e.target.closest('#poke-more');
+            if (more) { pokeListShown += 60; renderPokePickerList(); return; }
+            const b = e.target.closest('.poke-pick');
+            if (!b || !pokePickerSlot) return;
+            applyPokeChoice(pokePickerSlot, b.getAttribute('data-id'), b.getAttribute('data-name').toUpperCase());
+            closePokePicker();
+        });
+        const pokeLinkBtn = document.getElementById('btn-poke-use-link');
+        if (pokeLinkBtn) pokeLinkBtn.addEventListener('click', () => {
+            const v = ((document.getElementById('poke-link-input') || {}).value || '').trim();
+            if (!v) { alert('Chưa có link. Anh dán link ảnh (bắt đầu bằng https:// hoặc data:) vào ô bên trái đã.'); return; }
+            if (!/^(https?:|data:)/.test(v)) { alert('Link chưa đúng — link ảnh phải bắt đầu bằng https:// hoặc data:'); return; }
+            applyPokeChoice(pokePickerSlot, v, 'Link ảnh', 'link');
+            closePokePicker();
+        });
+        const pokeCloseBtn = document.getElementById('btn-poke-picker-close');
+        if (pokeCloseBtn) pokeCloseBtn.addEventListener('click', closePokePicker);
+
+        // Nạp ảnh đã chọn + vẽ bảng (chạy 1 lần khi mở trang)
+        loadArtOverrides();
+        renderPokeArtTable();
+        refreshTeamsArt();

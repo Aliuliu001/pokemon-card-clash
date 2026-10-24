@@ -366,6 +366,34 @@
             .score-line { font-size: .82rem; }
         }
 
+        /* ============ AVATAR POKÉMON: bảng chọn rõ ràng ============ */
+        #poke-art-section { overflow: hidden; }
+        #poke-art-section > .overflow-x-auto { max-height: 40dvh; border: 1px solid #334155; border-radius: .7rem; }
+        .poke-art-row { border-bottom: 1px solid #334155; }
+        .poke-art-row:last-child { border-bottom: 0; }
+        .poke-art-name { min-width: 150px; padding: .6rem; color: #f8fafc; background: #172033; vertical-align: middle; }
+        .poke-art-name b { display:block; font-size:.75rem; white-space:nowrap; }
+        .poke-art-name small { display:block; color:#94a3b8; font-size:.62rem; margin-top:.25rem; }
+        .poke-team-dot { display:inline-block; width:.55rem; height:.55rem; border-radius:999px; margin-right:.35rem; }
+        .poke-art-cell { min-width: 178px; padding: .45rem; text-align:center; vertical-align:top; background:#0f172a; }
+        .poke-art-cell.is-changed { background: rgba(20,83,45,.28); box-shadow: inset 0 0 0 1px rgba(74,222,128,.5); }
+        .poke-art-preview { height: 74px; display:flex; justify-content:center; align-items:center; background:rgba(30,41,59,.8); border-radius:.45rem; }
+        .poke-art-thumb { width:72px; height:72px; object-fit:contain; filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+        .poke-art-label { min-height: 1.9rem; display:flex; align-items:center; justify-content:center; font-size:.7rem; line-height:.9rem; font-weight:900; color:#f8fafc; margin-top:.3rem; }
+        .poke-art-status { display:inline-block; font-size:.6rem; line-height:1; color:#bbf7d0; background:#14532d; padding:.18rem .35rem; border-radius:999px; }
+        .poke-art-btns { display:flex; flex-wrap:wrap; justify-content:center; gap:.25rem; margin-top:.4rem; }
+        .poke-btn { padding:.27rem .38rem; font-size:.62rem; line-height:1.1; color:#fff; background:#334155; border:1px solid #64748b; border-radius:.32rem; font-weight:800; }
+        .poke-btn:hover { background:#475569; }
+        .poke-btn-pick { background:#1d4ed8; border-color:#60a5fa; }
+        .poke-btn-upload { background:#047857; border-color:#34d399; }
+        .poke-btn-copy { background:#7c3aed; border-color:#c4b5fd; }
+        .poke-btn-remove { background:#b91c1c; border-color:#fca5a5; }
+        .poke-picker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(105px,1fr)); gap:.5rem; padding:.25rem; }
+        .poke-pick { min-height:100px; padding:.35rem; border:1px solid #475569; border-radius:.5rem; background:#1e293b; color:#e2e8f0; font-size:.67rem; font-weight:800; }
+        .poke-pick:hover { border-color:#facc15; background:#334155; }
+        .poke-pick img { display:block; width:62px; height:62px; object-fit:contain; margin:auto; }
+        .poke-more { grid-column:1/-1; padding:.65rem; border-radius:.5rem; background:#334155; color:#fff; font-weight:800; }
+
         /* ============ NHẬT KÝ ĐIỂM (Task 5) ============ */
         .hist-item {
             display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;

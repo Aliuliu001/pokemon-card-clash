@@ -29,3 +29,14 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - Layout hiện tại: flex-col md:flex-row gây chồng chéo khi quá nhiều elements
 - Cần tách thành các sections độc lập với khoảng cách rõ ràng
 - Không chạm vào phần logic ảnh Pokémon anh đang làm dở trong `js/config.js` và `js/game.js`.
+
+## Avatar Pokémon: nạp, đổi và Stage an toàn (anh duyệt 2026-10-24)
+
+- [x] **Task 1**: Check nguồn artwork PokeAPI và review logic hiện tại
+- [x] **Task 2**: Làm bảng 11 đội hiện ảnh, tên, trạng thái và nút đầy đủ
+- [x] **Task 3**: Đưa avatar tải từ máy vào kho IndexedDB riêng, có migration ảnh cũ
+- [x] **Task 4**: Sửa Stage 1/2/3 — mở khoá thì giữ đến hết ván, reset về Stage 1
+- [x] **Task 5**: Bổ sung chọn / tải / bỏ ảnh tự chọn / sao chép Stage
+- [x] **Task 6**: Backup/restore gồm cả avatar tải lên
+- [x] **Task 7**: Test bảng 11 đội, IndexedDB, điểm → Stage, reset về Stage 1
+- [ ] **Task 8**: Push GitHub và kiểm tra trang online.

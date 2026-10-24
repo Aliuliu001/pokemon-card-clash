@@ -202,6 +202,15 @@ nút RESTART (`py-3→py-1.5`), padding header/panel, và sàn chiều cao thẻ
   mặt trước ✓ (ảnh trong khung kem, chữ trên nền vàng), thẻ đã lật ✓ (ô kem, chip điểm kem),
   hộp phóng to ✓ (nền kem + viền vàng phát sáng); 0 lỗi JS, `node --check` sạch, **0 thanh cuộn**.
 
+
+### ✅ Task 10 — Avatar Pokémon linh hoạt & Stage an toàn *(hoàn tất 2026-10-24)*
+- **Bảng 11 đội × 3 Stage:** mỗi ô có ảnh xem trước, tên, nguồn ảnh và nút **Chọn / Tải ảnh / Dùng S1 / Bỏ ảnh**. Bảng cuộn bên trong Settings, không làm tràn màn hình.
+- **Nguồn ảnh:** chọn từ danh sách PokeAPI (Gen 1–9, Mega, Gmax), dán link ảnh công khai hoặc tải ảnh từ máy. Thứ tự hiển thị: ảnh tự chọn → dạng mặc định → avatar gốc.
+- **Kho an toàn:** ảnh tải lên được nén vừa đủ hiển thị và lưu vào IndexedDB riêng, không trộn với kho ảnh thẻ. Ảnh cũ dạng dataURL tự chuyển sang kho mới khi mở game.
+- **Sao lưu:** file JSON mang theo cả metadata và ảnh Avatar tự tải lên; khôi phục đưa lại vào kho riêng.
+- **Stage:** Stage 2/3 đã mở khóa giữ đến hết ván, kể cả bị trừ điểm. Bấm RESTART hoặc đổi đội trả đầy đủ ảnh, badge và hào quang về Stage 1.
+- **Kiểm tra:** bảng thực tế có 11 dòng / 33 ô / 88 nút; IndexedDB đọc-ghi thành công; 0 điểm sau khi lên Stage 3 vẫn giữ Stage 3; reset trở về Stage 1; `node --check`, HTML parse và `git diff --check` sạch.
+
 ## B. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
 
 | Mã | Ý tưởng | Mức độ | Trạng thái |
