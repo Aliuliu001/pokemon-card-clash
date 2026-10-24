@@ -23,7 +23,7 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - [x] **Task 4**: Làm 5 ô cài đặt game tự xuống hàng, không cắt chữ
 - [x] **Task 5**: Cho bảng Excel có khung riêng, luôn hiện được dữ liệu
 - [x] **Task 6**: Test hiển thị và các nút cộng/trừ, lưu/hủy
-- [ ] **Task 7**: Tăng version CSS, push GitHub và kiểm tra trang online
+- [x] **Task 7**: Tăng version CSS, push GitHub và kiểm tra trang online
 
 ## Ghi chú
 - Layout hiện tại: flex-col md:flex-row gây chồng chéo khi quá nhiều elements
