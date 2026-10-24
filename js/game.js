@@ -6,7 +6,9 @@
         
         let DISPLAY_MODE = { front: 'both', back: 'full' };
         let GLOBAL_GAME_TIME = 180; 
-        let GLOBAL_TIMER_ENABLED = true; 
+        let GLOBAL_TIMER_ENABLED = true;
+        let ROUND_MODE = 'one-round';
+        let currentRound = 1;
         let currentGameTime = 180;
         let gameTimerInterval = null;
         let confettiInterval = null;
@@ -210,6 +212,7 @@
                 },
                 globalTime: parseInt(document.getElementById('setting-global-time').value),
                 timerEnabled: document.getElementById('setting-timer-enabled').value === 'on',
+                roundMode: (document.getElementById('setting-round-mode') || {}).value || ROUND_MODE,
                 scoreSettings: SCORE_SETTINGS,
                 // Task 4 & 7: âm thanh tách riêng + chế độ máy chiếu
                 sfxEnabled: soundEnabled,
@@ -388,6 +391,7 @@
                 GLOBAL_GAME_TIME = s.globalTime || 180;
                 GLOBAL_TIMER_ENABLED = s.timerEnabled !== false;
                 if(s.scoreSettings) SCORE_SETTINGS = s.scoreSettings;
+                ROUND_MODE = s.roundMode || 'one-round';
                 // Âm thanh tách riêng + chế độ máy chiếu (Task 4 & Task 7)
                 if (s.sfxEnabled !== undefined) soundEnabled = !!s.sfxEnabled;
                 if (s.bgmEnabled !== undefined) bgmEnabled = !!s.bgmEnabled;
@@ -421,6 +425,7 @@
             if(document.getElementById('setting-back-mode')) document.getElementById('setting-back-mode').value = DISPLAY_MODE.back;
             if(document.getElementById('setting-timer-enabled')) document.getElementById('setting-timer-enabled').value = GLOBAL_TIMER_ENABLED ? 'on' : 'off';
             if(document.getElementById('setting-global-time')) document.getElementById('setting-global-time').value = GLOBAL_GAME_TIME;
+            if(document.getElementById('setting-round-mode')) document.getElementById('setting-round-mode').value = ROUND_MODE;
             
             document.getElementById('val-posMin').innerText = SCORE_SETTINGS.posMin;
             document.getElementById('val-posMax').innerText = SCORE_SETTINGS.posMax;
@@ -614,6 +619,7 @@
         });
 
         document.getElementById('btn-save-settings').addEventListener('click', () => {
+            ROUND_MODE = (document.getElementById('setting-round-mode') || {}).value || 'one-round';
             autoSave();
             document.getElementById('settings-modal').classList.add('hidden'); 
             document.getElementById('settings-modal').classList.remove('flex');
@@ -1133,27 +1139,26 @@
             updateEvolution(teamKey, true, 1); // trả cả ảnh, badge và hào quang về Stage 1
         }
 
+        function defaultIdentity(cfg) { return { pokemonId: String(cfg.id), name: cfg.name, palette: { rgb:cfg.rgb, main:cfg.main, light:cfg.light, dark:cfg.dark, text:cfg.text } }; }
+        function identityKey(cfg) { return String(cfg.id); }
+        function getTeamIdentity(team) { return TEAM_IDENTITIES[identityKey(team.config)] || defaultIdentity(team.config); }
+        function saveTeamIdentities() { SafeStore.set(backupDataKey('pokemonClashTeamIdentities'), JSON.stringify(TEAM_IDENTITIES)); }
+        function loadTeamIdentities() { try { TEAM_IDENTITIES = JSON.parse(SafeStore.get(backupDataKey('pokemonClashTeamIdentities')) || '{}') || {}; } catch(e) { TEAM_IDENTITIES = {}; } }
+        function applyIdentityTheme(teamKey) {
+            const team = teams[teamKey], identity = getTeamIdentity(team), p = identity.palette || defaultIdentity(team.config).palette;
+            const panel = document.getElementById(`${teamKey}-panel`);
+            panel.style.setProperty('--t-rgb', p.rgb); panel.style.setProperty('--t-main', p.main); panel.style.setProperty('--t-light', p.light); panel.style.setProperty('--t-dark', p.dark); panel.style.setProperty('--t-text', p.text);
+            const select = document.getElementById(`${teamKey}-select`);
+            if (select) { const opt = [...select.options].find(o => o.value === String(team.config.id)); if (opt) opt.textContent = `TEAM ${identity.name}`; }
+            document.getElementById('main-title').innerText = `CLASH: ${getTeamIdentity(teams.team1).name} vs ${getTeamIdentity(teams.team2).name}`;
+        }
         function applyTheme(teamKey) {
             const team = teams[teamKey];
-            const panel = document.getElementById(`${teamKey}-panel`);
-            panel.style.setProperty('--t-rgb', team.config.rgb); 
-            panel.style.setProperty('--t-main', team.config.main); 
-            panel.style.setProperty('--t-light', team.config.light); 
-            panel.style.setProperty('--t-dark', team.config.dark); 
-            panel.style.setProperty('--t-text', team.config.text); 
-            
+            applyIdentityTheme(teamKey);
             const avatarImg = document.getElementById(`${teamKey}-avatar`);
-            if (team.config.customImg) {
-                avatarImg.onerror = null;
-                avatarImg.src = team.config.customImg;
-            } else {
-                setAvatarArt(teamKey, team.config.id);
-            }
-            team.highestStageUnlocked = 1;
-            team.evoStage = 0;      // đội mới luôn bắt đầu Stage 1
-            updateEvolution(teamKey);
-            document.getElementById('main-title').innerText = `CLASH: ${teams.team1.config.name} vs ${teams.team2.config.name}`;
-            renderBoard(teamKey);
+            if (team.config.customImg) { avatarImg.onerror = null; avatarImg.src = team.config.customImg; } else setAvatarArt(teamKey, team.config.id);
+            team.highestStageUnlocked = 1; team.evoStage = 0;
+            updateEvolution(teamKey); renderBoard(teamKey);
         }
 
         function populateSelects() {
@@ -2014,10 +2019,22 @@
             }
         }
 
+        function roundLimit() { return ROUND_MODE === 'three-rounds' ? 3 : 1; }
+        function startNextRound() {
+            currentRound++;
+            ['team1','team2'].forEach(t => { teams[t].flipped = 0; teams[t].flippedEl.innerText = '0'; });
+            isGameStarted = false; isGameOver = false; stopGameGlobalTimer();
+            distributeSpecialCards(); renderBoard('team1'); renderBoard('team2');
+            const status = document.getElementById('global-status');
+            status.style.display = 'block'; status.classList.add('status-overlay'); status.innerHTML = `<span class="text-yellow-300 font-black">VÒNG ${currentRound}/${roundLimit()} — BẮT ĐẦU!</span>`;
+            setTimeout(() => { status.style.display='none'; status.classList.remove('status-overlay'); }, 1200);
+        }
         function checkEndGame() {
-            if (teams.team1.flipped === CARDS_PER_TEAM && teams.team2.flipped === CARDS_PER_TEAM) {
-                triggerWinCelebration();
-            }
+            if (teams.team1.flipped !== CARDS_PER_TEAM || teams.team2.flipped !== CARDS_PER_TEAM) return;
+            if (currentRound < roundLimit()) {
+                const go = confirm(`✅ Đã xong Vòng ${currentRound}/${roundLimit()}!\n\nĐiểm và Stage được giữ nguyên.\nBấm OK để sang Vòng ${currentRound + 1}; bấm Hủy để kết thúc và xem kết quả.`);
+                if (go) startNextRound(); else triggerWinCelebration();
+            } else triggerWinCelebration();
         }
 
         function shootConfetti() {
@@ -2116,6 +2133,7 @@
 
         function initGame() {
             isGameOver = false;
+            currentRound = 1;
             stopGameGlobalTimer();
             tempoMultiplier = 1.0;
             clearInterval(confettiInterval);
@@ -2404,6 +2422,7 @@
                     },
                     globalTime: parseInt((document.getElementById('setting-global-time') || {}).value) || GLOBAL_TIME.totalSeconds,
                     timerEnabled: ((document.getElementById('setting-timer-enabled') || {}).value) === 'on',
+                    roundMode: (document.getElementById('setting-round-mode') || {}).value || ROUND_MODE,
                     scoreSettings: SCORE_SETTINGS,
                     // Task 4 & 7: mang theo âm thanh + chế độ máy chiếu
                     sfxEnabled: soundEnabled,
@@ -2423,6 +2442,7 @@
                     ranking: getRanking(),
                     // Avatar: metadata + toàn bộ ảnh tải lên trong kho riêng
                     artOverrides: ART_OVERRIDES,
+                    teamIdentities: TEAM_IDENTITIES,
                     avatarAssets: avatarAssets
                 };
                 const nAlbums = Object.keys(albums).length;
@@ -2561,6 +2581,7 @@
                 if (payload.settings) SafeStore.set(backupDataKey('pokemonClashSettings'), JSON.stringify(payload.settings));
                 if (Array.isArray(payload.ranking)) SafeStore.set(backupDataKey('pokemonClashRanking'), JSON.stringify(payload.ranking)); // Task 8
                 if (payload.artOverrides && typeof payload.artOverrides === 'object') { ART_OVERRIDES = payload.artOverrides; saveArtOverrides(); }
+                if (payload.teamIdentities && typeof payload.teamIdentities === 'object') { TEAM_IDENTITIES = payload.teamIdentities; saveTeamIdentities(); }
                 if (payload.avatarAssets && typeof payload.avatarAssets === 'object') { avatarAssets = payload.avatarAssets; await saveAvatarAssets(); }
                 // 2) Album + kho ảnh → IndexedDB (trượt thì về localStorage)
                 albums = restoredAlbums.albums;
@@ -2572,6 +2593,7 @@
                 if (payload.settings) {
                     if (payload.settings.cardsCount) CARDS_PER_TEAM = payload.settings.cardsCount;
                     if (payload.settings.displayMode) { DISPLAY_MODE.front = payload.settings.displayMode.front; DISPLAY_MODE.back = payload.settings.displayMode.back; }
+                    if (payload.settings.roundMode) ROUND_MODE = payload.settings.roundMode;
                 }
                 loadData(); // tự renderGrid + renderBoard từ bản đã lưu
                 renderBoard('team1'); renderBoard('team2');
@@ -2997,6 +3019,21 @@
             const same = [{ provider: 'pokeapi', pokemonId: String(pokemonId), label: fallbackLabel || 'Pokémon đã chọn', autoStage: true }];
             evolutionStageCache.set(cacheKey, same); return same;
         }
+        async function resolvePokemonIdentity(pokemonId, fallbackName, previousPalette) {
+            try {
+                const data = await (await fetch('https://pokeapi.co/api/v2/pokemon/' + encodeURIComponent(pokemonId))).json();
+                const primary = ((data.types || [])[0] || {}).type || {};
+                const typeName = primary.name || '';
+                return { pokemonId:String(pokemonId), name:(data.name || fallbackName).toUpperCase(), typeName, palette:POKEMON_TYPE_PALETTES[typeName] || previousPalette };
+            } catch (e) { return { pokemonId:String(pokemonId), name:(fallbackName || 'POKÉMON ĐÃ CHỌN').toUpperCase(), palette:previousPalette }; }
+        }
+        async function updateSlotIdentity(cfgId, value, label, provider) {
+            const cfg = POKEMON_TEAMS.find(p => p.id === cfgId) || {};
+            const old = TEAM_IDENTITIES[cfgId] || defaultIdentity(cfg);
+            const next = provider === 'link' ? { pokemonId:String(value), name:(label || 'ẢNH TỰ CHỌN').toUpperCase(), palette:old.palette } : await resolvePokemonIdentity(value, label, old.palette);
+            TEAM_IDENTITIES[cfgId] = next; saveTeamIdentities();
+            ['team1','team2'].forEach(k => { if (String(teams[k].config.id) === String(cfgId)) applyIdentityTheme(k); });
+        }
         async function applyPokeChoice(slot, value, label, provider) {
             if (!slot) return false;
             const cfg = POKEMON_TEAMS.find(p => p.id === slot.cfgId) || {};
@@ -3004,6 +3041,7 @@
                 ? { provider: 'link', src: value, label: label || 'Link ảnh' }
                 : { provider: 'pokeapi', pokemonId: String(value), label: label || 'Pokémon đã chọn' };
             setStageOverride(slot.cfgId, slot.stage, next);
+            if (slot.stage === 1) await updateSlotIdentity(slot.cfgId, value, next.label, provider);
             let autoMessage = '';
             // Chọn Stage 1: Pokémon trong danh sách theo chuỗi tiến hoá; link ngoài giữ chính ảnh đó ở các Stage sau.
             if (slot.stage === 1 && provider !== 'link') {
@@ -3143,6 +3181,7 @@
                 const uploaded = { provider: 'upload', assetKey, label: 'Ảnh tải lên: ' + f.name };
                 setStageOverride(slot.cfgId, slot.stage, uploaded);
                 if (slot.stage === 1) {
+                    await updateSlotIdentity(slot.cfgId, assetKey, uploaded.label, 'link');
                     // Ảnh tự tải không có thông tin chuỗi tiến hoá: tự dùng ở cả 3 Stage.
                     setStageOverride(slot.cfgId, 2, Object.assign({}, uploaded));
                     setStageOverride(slot.cfgId, 3, Object.assign({}, uploaded));
@@ -3183,7 +3222,9 @@
         const pokeCloseBtn = document.getElementById('btn-poke-picker-close');
         if (pokeCloseBtn) pokeCloseBtn.addEventListener('click', closePokePicker);
 
-        // Nạp ảnh đã chọn + vẽ bảng (chạy 1 lần khi mở trang)
+        // Nạp ảnh/nhận diện đã chọn + vẽ bảng (chạy 1 lần khi mở trang)
         loadArtOverrides();
+        loadTeamIdentities();
+        ['team1','team2'].forEach(applyIdentityTheme);
         renderPokeArtTable();
         refreshTeamsArt();

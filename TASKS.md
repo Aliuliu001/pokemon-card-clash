@@ -46,3 +46,10 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - [x] **Task 9**: Khi chọn Stage 1, tìm chuỗi tiến hoá thật và tự điền Stage 2/3
 - [x] **Task 10**: Với Pokémon không có chuỗi thường / ảnh tự tải, tự dùng ảnh Stage 1 cho Stage sau
 - [x] **Task 11**: Test Bellsprout → Weepinbell → Victreebel và push GitHub Pages.
+
+## Tên/màu đội theo Avatar & chơi nhiều vòng (anh duyệt 2026-10-24)
+
+- [x] **Task 12**: Stage 1 đổi tên đội và bảng màu theo hệ Pokémon (PokeAPI)
+- [x] **Task 13**: 12 thẻ có lựa chọn 1 vòng hoặc 3 vòng học; giữ điểm/Stage giữa vòng
+- [x] **Task 14**: Lưu cài đặt, backup/restore chế độ vòng; test trình duyệt
+- [x] **Task 15**: Push GitHub và kiểm tra trang online (đang chuẩn bị đẩy bản hoàn tất).

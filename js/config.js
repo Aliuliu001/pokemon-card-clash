@@ -49,6 +49,11 @@ const MAX_ROWS = 100;
         // Cấu trúc: ART_OVERRIDES[idPokemon][nangCap] = { src, label }
         //   src = số id (lấy trong danh sách PokeAPI) | link https | data:URL (ảnh tải lên)
         let ART_OVERRIDES = {};
+        // Stage 1 có thể đổi danh tính/màu của một slot đội, không chỉ đổi ảnh.
+        let TEAM_IDENTITIES = {};
+        const POKEMON_TYPE_PALETTES = {
+            normal:{rgb:'163, 163, 163',main:'#a3a3a3',light:'#f5f5f5',dark:'#525252',text:'#f5f5f5'}, fire:{rgb:'239, 68, 68',main:'#ef4444',light:'#fecaca',dark:'#991b1b',text:'#fecaca'}, water:{rgb:'59, 130, 246',main:'#3b82f6',light:'#bfdbfe',dark:'#1d4ed8',text:'#bfdbfe'}, electric:{rgb:'234, 179, 8',main:'#eab308',light:'#fef08a',dark:'#a16207',text:'#fde047'}, grass:{rgb:'34, 197, 94',main:'#22c55e',light:'#bbf7d0',dark:'#15803d',text:'#bbf7d0'}, ice:{rgb:'14, 165, 233',main:'#0ea5e9',light:'#bae6fd',dark:'#0369a1',text:'#e0f2fe'}, fighting:{rgb:'220, 38, 38',main:'#dc2626',light:'#fecaca',dark:'#7f1d1d',text:'#fecaca'}, poison:{rgb:'168, 85, 247',main:'#a855f7',light:'#e9d5ff',dark:'#6b21a8',text:'#e9d5ff'}, ground:{rgb:'180, 83, 9',main:'#b45309',light:'#fde68a',dark:'#78350f',text:'#fde68a'}, flying:{rgb:'96, 165, 250',main:'#60a5fa',light:'#dbeafe',dark:'#1d4ed8',text:'#dbeafe'}, psychic:{rgb:'236, 72, 153',main:'#ec4899',light:'#fbcfe8',dark:'#9d174d',text:'#fbcfe8'}, bug:{rgb:'101, 163, 13',main:'#65a30d',light:'#d9f99d',dark:'#3f6212',text:'#ecfccb'}, rock:{rgb:'161, 98, 7',main:'#a16207',light:'#fde68a',dark:'#713f12',text:'#fde68a'}, ghost:{rgb:'126, 34, 206',main:'#7e22ce',light:'#e9d5ff',dark:'#581c87',text:'#f3e8ff'}, dragon:{rgb:'79, 70, 229',main:'#4f46e5',light:'#c7d2fe',dark:'#312e81',text:'#e0e7ff'}, dark:{rgb:'71, 85, 105',main:'#475569',light:'#cbd5e1',dark:'#0f172a',text:'#e2e8f0'}, steel:{rgb:'100, 116, 139',main:'#64748b',light:'#e2e8f0',dark:'#334155',text:'#e2e8f0'}, fairy:{rgb:'244, 114, 182',main:'#f472b6',light:'#fce7f3',dark:'#9d174d',text:'#fce7f3'}
+        };
 
         const EFFECT_SETTINGS = { explosionDelayMs: 1500, freezeDelayMs: 1500 };
         const AVATAR_SETTINGS = { happyEffectEnabled: true, sadEffectEnabled: true };
