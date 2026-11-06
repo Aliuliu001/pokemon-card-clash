@@ -53,3 +53,10 @@ Sửa phần Input nhập ảnh, tạo chủ đề bị chồng chéo lên nhau 
 - [x] **Task 13**: 12 thẻ có lựa chọn 1 vòng hoặc 3 vòng học; giữ điểm/Stage giữa vòng
 - [x] **Task 14**: Lưu cài đặt, backup/restore chế độ vòng; test trình duyệt
 - [x] **Task 15**: Push GitHub và kiểm tra trang online (đang chuẩn bị đẩy bản hoàn tất).
+
+## Số vòng học & thứ tự xuất hiện thẻ (anh duyệt 2026-11-06)
+
+- [x] **Task 16**: Thêm lựa chọn 2 vòng học giữa 1 và 3 vòng.
+- [x] **Task 17**: Thêm chọn `Ngẫu nhiên` hoặc `Theo thứ tự nhập`.
+- [x] **Task 18**: Giữ nguyên cặp Mặt trước/Mặt sau của cùng dòng khi theo thứ tự; thiếu dòng thì lặp đúng thứ tự, không Missing Data.
+- [x] **Task 19**: Lưu/khôi phục hai cài đặt mới qua bộ nhớ và file sao lưu; test trình duyệt thật.

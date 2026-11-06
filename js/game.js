@@ -1,6 +1,8 @@
         let frontItemsDatabase = [];
         let backItemsDatabase = [];
-        let globalBackItemsDatabase = []; 
+        let globalBackItemsDatabase = [];
+        // Giữ nguyên từng dòng Input để chế độ “Theo thứ tự nhập” không ghép chéo hai mặt thẻ.
+        let lessonItemsDatabase = [];
         let isSpecialModeActive = false; 
         let isProcessingModal = false; 
         
@@ -8,6 +10,8 @@
         let GLOBAL_GAME_TIME = 180; 
         let GLOBAL_TIMER_ENABLED = true;
         let ROUND_MODE = 'one-round';
+        // random = trộn như cách chơi cũ; input-order = giữ nguyên từng dòng Input.
+        let CARD_ORDER_MODE = 'random';
         let currentRound = 1;
         let currentGameTime = 180;
         let gameTimerInterval = null;
@@ -213,6 +217,7 @@
                 globalTime: parseInt(document.getElementById('setting-global-time').value),
                 timerEnabled: document.getElementById('setting-timer-enabled').value === 'on',
                 roundMode: (document.getElementById('setting-round-mode') || {}).value || ROUND_MODE,
+                cardOrderMode: (document.getElementById('setting-card-order') || {}).value || CARD_ORDER_MODE,
                 scoreSettings: SCORE_SETTINGS,
                 // Task 4 & 7: âm thanh tách riêng + chế độ máy chiếu
                 sfxEnabled: soundEnabled,
@@ -392,6 +397,7 @@
                 GLOBAL_TIMER_ENABLED = s.timerEnabled !== false;
                 if(s.scoreSettings) SCORE_SETTINGS = s.scoreSettings;
                 ROUND_MODE = s.roundMode || 'one-round';
+                CARD_ORDER_MODE = s.cardOrderMode || 'random';
                 // Âm thanh tách riêng + chế độ máy chiếu (Task 4 & Task 7)
                 if (s.sfxEnabled !== undefined) soundEnabled = !!s.sfxEnabled;
                 if (s.bgmEnabled !== undefined) bgmEnabled = !!s.bgmEnabled;
@@ -426,6 +432,7 @@
             if(document.getElementById('setting-timer-enabled')) document.getElementById('setting-timer-enabled').value = GLOBAL_TIMER_ENABLED ? 'on' : 'off';
             if(document.getElementById('setting-global-time')) document.getElementById('setting-global-time').value = GLOBAL_GAME_TIME;
             if(document.getElementById('setting-round-mode')) document.getElementById('setting-round-mode').value = ROUND_MODE;
+            if(document.getElementById('setting-card-order')) document.getElementById('setting-card-order').value = CARD_ORDER_MODE;
             
             document.getElementById('val-posMin').innerText = SCORE_SETTINGS.posMin;
             document.getElementById('val-posMax').innerText = SCORE_SETTINGS.posMax;
@@ -435,7 +442,8 @@
             document.querySelectorAll('.team-cards-total').forEach(el => el.innerText = CARDS_PER_TEAM);
 
             frontItemsDatabase = [];
-            globalBackItemsDatabase = []; 
+            globalBackItemsDatabase = [];
+            lessonItemsDatabase = [];
             parsedData.forEach(row => {
                 let fIdTrimmed = row.fId ? row.fId.toString().trim() : '';
                 let fWordTrimmed = row.fWord ? row.fWord.toString().trim() : '';
@@ -449,8 +457,12 @@
                 if(bTextTrimmed === 'undefined') bTextTrimmed = '';
                 if(bTimeTrimmed === 'undefined') bTimeTrimmed = '';
 
-                if (fIdTrimmed || fWordTrimmed) { frontItemsDatabase.push({ word: fWordTrimmed, idStr: fIdTrimmed }); }
-                if (bImgIdTrimmed || bTextTrimmed) { globalBackItemsDatabase.push({ text: bTextTrimmed, imgId: bImgIdTrimmed, time: bTimeTrimmed }); }
+                const front = { word: fWordTrimmed, idStr: fIdTrimmed };
+                const back = { text: bTextTrimmed, imgId: bImgIdTrimmed, time: bTimeTrimmed };
+                if (fIdTrimmed || fWordTrimmed) frontItemsDatabase.push(front);
+                if (bImgIdTrimmed || bTextTrimmed) globalBackItemsDatabase.push(back);
+                // Một dòng có ít nhất một mặt là một thẻ học hợp lệ, giữ nguyên vị trí dòng.
+                if (fIdTrimmed || fWordTrimmed || bImgIdTrimmed || bTextTrimmed) lessonItemsDatabase.push({ front, back });
             });
             
             renderGrid(parsedData);
@@ -620,6 +632,7 @@
 
         document.getElementById('btn-save-settings').addEventListener('click', () => {
             ROUND_MODE = (document.getElementById('setting-round-mode') || {}).value || 'one-round';
+            CARD_ORDER_MODE = (document.getElementById('setting-card-order') || {}).value || 'random';
             autoSave();
             document.getElementById('settings-modal').classList.add('hidden'); 
             document.getElementById('settings-modal').classList.remove('flex');
@@ -1258,6 +1271,48 @@
                 : availablePos[Math.floor(Math.random() * availablePos.length)];
         }
 
+        // Tạo danh sách thẻ trước khi vẽ. input-order giữ nguyên một dòng Input;
+        // random giữ đúng cách trộn độc lập của game cũ.
+        function buildCardSequence() {
+            if (CARD_ORDER_MODE === 'input-order' && lessonItemsDatabase.length) {
+                return Array.from({ length: CARDS_PER_TEAM }, (_, i) => {
+                    const row = lessonItemsDatabase[i % lessonItemsDatabase.length];
+                    return {
+                        frontItem: { ...row.front },
+                        backItem: { ...row.back }
+                    };
+                });
+            }
+
+            let fronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5);
+            let backs = [...backItemsDatabase].sort(() => Math.random() - 0.5);
+            return Array.from({ length: CARDS_PER_TEAM }, () => {
+                if (!fronts.length) fronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5);
+                if (!backs.length) backs = [...backItemsDatabase].sort(() => Math.random() - 0.5);
+                return {
+                    frontItem: fronts.pop() || { word: '', idStr: '' },
+                    backItem: backs.pop() || { text: '', imgId: '', time: '' }
+                };
+            });
+        }
+
+        function normalizeCardPair(pair) {
+            let frontItem = { ...(pair.frontItem || { word: '', idStr: '' }) };
+            let backItem = { ...(pair.backItem || { text: '', imgId: '', time: '' }) };
+            // KHÔNG BAO GIỜ hiện "Missing Data": mặt trống tự dùng mặt còn lại.
+            const poolOnlyIds = (idStr) => (idStr || '').split(',').filter(id => id && imagesPool[id]).join(',');
+            if (!backItem.text && !backItem.imgId) {
+                backItem.isEmptyBack = true;
+                if (frontItem.word || frontItem.idStr) {
+                    backItem = { text: frontItem.word, imgId: poolOnlyIds(frontItem.idStr), time: backItem.time || '', isEmptyBack: true };
+                }
+            }
+            if (!frontItem.word && !frontItem.idStr && (backItem.text || backItem.imgId)) {
+                frontItem = { word: backItem.text, idStr: poolOnlyIds(backItem.imgId) };
+            }
+            return { frontItem, backItem };
+        }
+
         function renderBoard(teamId) {
             const board = teams[teamId].board; 
             
@@ -1273,32 +1328,15 @@
             board.style.setProperty('--card-rows', cardRowsForHeight);
             board.innerHTML = '';
             
-            let currentFronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5); 
-            let currentBacks = [...backItemsDatabase].sort(() => Math.random() - 0.5);
+            const cardSequence = buildCardSequence();
 
             for (let i = 0; i < CARDS_PER_TEAM; i++) {
                 const card = document.createElement('div'); card.className = 'card w-full aspect-[4/5] perspective cursor-pointer';
                 const inner = document.createElement('div'); inner.className = 'card-inner w-full h-full relative transform-style-3d rounded-lg';
 
-                let frontItem = currentFronts.pop(); 
-                if (!frontItem) { currentFronts = [...frontItemsDatabase].sort(() => Math.random() - 0.5); frontItem = currentFronts.pop() || { word: "", idStr: "" }; }
-                
-                let backItem = currentBacks.pop(); 
-                if (!backItem) { currentBacks = [...backItemsDatabase].sort(() => Math.random() - 0.5); backItem = currentBacks.pop() || { text: "", imgId: "", time: "" }; }
-
-                // KHÔNG BAO GIỜ hiện "Missing Data":
-                // - Mặt SAU trống → hiện card galaxy (logo + 2 pokemon), dữ liệu tự lặp mặt trước
-                // - Mặt TRƯỚC trống → tự lấy mặt SAU
-                const poolOnlyIds = (idStr) => (idStr || '').split(',').filter(id => id && imagesPool[id]).join(',');
-                if (!backItem.text && !backItem.imgId) {
-                    backItem.isEmptyBack = true; // đánh dấu → openZoomModal hiện card galaxy
-                    if (frontItem.word || frontItem.idStr) {
-                        backItem = { text: frontItem.word, imgId: poolOnlyIds(frontItem.idStr), time: backItem.time || "", isEmptyBack: true };
-                    }
-                }
-                if (!frontItem.word && !frontItem.idStr && (backItem.text || backItem.imgId)) {
-                    frontItem = { word: backItem.text, idStr: poolOnlyIds(backItem.imgId) };
-                }
+                const pair = normalizeCardPair(cardSequence[i] || {});
+                const frontItem = pair.frontItem;
+                const backItem = pair.backItem;
                 
                 const cover = document.createElement('div'); cover.className = `absolute inset-0 backface-hidden rounded-lg card-cover theme-card bg-white`;
                 
@@ -2019,7 +2057,11 @@
             }
         }
 
-        function roundLimit() { return ROUND_MODE === 'three-rounds' ? 3 : 1; }
+        function roundLimit() {
+            if (ROUND_MODE === 'three-rounds') return 3;
+            if (ROUND_MODE === 'two-rounds') return 2;
+            return 1;
+        }
         function startNextRound() {
             currentRound++;
             ['team1','team2'].forEach(t => { teams[t].flipped = 0; teams[t].flippedEl.innerText = '0'; });
@@ -2423,6 +2465,7 @@
                     globalTime: parseInt((document.getElementById('setting-global-time') || {}).value) || GLOBAL_TIME.totalSeconds,
                     timerEnabled: ((document.getElementById('setting-timer-enabled') || {}).value) === 'on',
                     roundMode: (document.getElementById('setting-round-mode') || {}).value || ROUND_MODE,
+                    cardOrderMode: (document.getElementById('setting-card-order') || {}).value || CARD_ORDER_MODE,
                     scoreSettings: SCORE_SETTINGS,
                     // Task 4 & 7: mang theo âm thanh + chế độ máy chiếu
                     sfxEnabled: soundEnabled,
@@ -2594,6 +2637,7 @@
                     if (payload.settings.cardsCount) CARDS_PER_TEAM = payload.settings.cardsCount;
                     if (payload.settings.displayMode) { DISPLAY_MODE.front = payload.settings.displayMode.front; DISPLAY_MODE.back = payload.settings.displayMode.back; }
                     if (payload.settings.roundMode) ROUND_MODE = payload.settings.roundMode;
+                    if (payload.settings.cardOrderMode) CARD_ORDER_MODE = payload.settings.cardOrderMode;
                 }
                 loadData(); // tự renderGrid + renderBoard từ bản đã lưu
                 renderBoard('team1'); renderBoard('team2');

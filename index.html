@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/style.css?v=16">
+    <link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body class="p-1 md:p-2 pb-3 md:pb-3 flex flex-col items-center relative overflow-x-hidden">
 
@@ -190,7 +190,15 @@
                         <label class="text-slate-300 text-sm font-semibold block mb-1">Sau khi hết thẻ:</label>
                         <select id="setting-round-mode" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
                             <option value="one-round">1 vòng — kết thúc</option>
+                            <option value="two-rounds">2 vòng học</option>
                             <option value="three-rounds">3 vòng học — đề xuất</option>
+                        </select>
+                    </div>
+                    <div class="min-w-0">
+                        <label class="text-slate-300 text-sm font-semibold block mb-1">Thẻ xuất hiện:</label>
+                        <select id="setting-card-order" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm p-2.5 rounded-lg outline-none border border-slate-500 cursor-pointer shadow-md transition-colors font-semibold">
+                            <option value="random">Ngẫu nhiên — đề xuất</option>
+                            <option value="input-order">Theo thứ tự nhập</option>
                         </select>
                     </div>
                 </div>
@@ -533,8 +541,8 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=18"></script>
-    <script src="js/game.js?v=18"></script>
+    <script src="js/config.js?v=19"></script>
+    <script src="js/game.js?v=19"></script>
 
 </body>
 </html>

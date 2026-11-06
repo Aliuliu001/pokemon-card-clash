@@ -211,7 +211,25 @@ nút RESTART (`py-3→py-1.5`), padding header/panel, và sàn chiều cao thẻ
 - **Stage:** Stage 2/3 đã mở khóa giữ đến hết ván, kể cả bị trừ điểm. Bấm RESTART hoặc đổi đội trả đầy đủ ảnh, badge và hào quang về Stage 1.
 - **Kiểm tra:** bảng thực tế có 11 dòng / 33 ô / 88 nút; IndexedDB đọc-ghi thành công; 0 điểm sau khi lên Stage 3 vẫn giữ Stage 3; reset trở về Stage 1; `node --check`, HTML parse và `git diff --check` sạch.
 
-## B. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
+## B. PHASE 3 — SỐ VÒNG HỌC & THỨ TỰ THẺ *(hoàn tất Lô 5: 2026-11-06)*
+
+| Lô | Task | Mô tả ngắn | Trạng thái |
+|---|---|---|---|
+| **Lô 5** | Task 16 | Thêm lựa chọn 2 vòng học | ✅ Xong 2026-11-06 |
+| **Lô 5** | Task 17 | Thẻ theo thứ tự Input hoặc ngẫu nhiên | ✅ Xong 2026-11-06 |
+
+### ✅ LÔ 5 — Số vòng và thứ tự thẻ
+- **Sau khi hết thẻ:** có đủ `1 vòng — kết thúc`, `2 vòng học`, `3 vòng học — đề xuất`. Điểm, Stage và thống kê vẫn giữ khi chuyển vòng.
+- **Thẻ xuất hiện:**
+  - `Ngẫu nhiên — đề xuất`: giữ đúng kiểu trộn độc lập như bản cũ.
+  - `Theo thứ tự nhập`: dòng 1 Input ra thẻ 1, dòng 2 ra thẻ 2… Mặt trước và mặt sau cùng một dòng luôn đi cùng nhau, phù hợp hội thoại/quy trình/câu chuyện.
+- Nếu số thẻ lớn hơn số dòng đang có, game lặp lại từ dòng đầu theo đúng thứ tự; không hiện `Missing Data`.
+- Hai lựa chọn được tự lưu, nằm trong file sao lưu và được khôi phục lại.
+- **Nghiệm thu thật:** trình duyệt với 4 dòng `FRONT-1/BACK-1` → `FRONT-4/BACK-4`: thẻ hiện đúng 1→2→3→4; mở thẻ 1 nhận đúng `BACK-1`; chọn 2 vòng chuyển từ Vòng 1 sang Vòng 2 và số lật về 0; đổi sang ngẫu nhiên thấy thứ tự bị trộn.
+
+---
+
+## C. PHASE 2 — Ý TƯỞNG MỚI *(chưa làm, chờ Phase 1 xong)*
 
 | Mã | Ý tưởng | Mức độ | Trạng thái |
 |---|---|---|---|
